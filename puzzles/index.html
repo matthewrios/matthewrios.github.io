@@ -1,0 +1,1047 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Puzzles">
+<meta name="robots" content="noindex">
+<title>Pocket Puzzles</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<meta name="theme-color" content="#E9EDF3">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,600;12..96,800&family=DM+Sans:opsz,wght@9..40,400;9..40,500;9..40,700&display=swap">
+<style>
+/* Layout: one narrow column (max 460px). Hub = stacked game tiles; game page = today + level grid; puzzle = header, board, tools, rules. */
+:root{
+  --bg:#E9EDF3; --surface:#FFFFFF; --sunk:#DCE2EB; --ink:#151B27; --muted:#586275; --line:#C7CFDB; --edge:#232B3A; --block:#1B2230;
+  --bloom:#C2306A; --even:#0C7A75; --trail:#B9680A; --six:#4251C4; --plots:#7A45C2; --weave:#B2452A; --mini:#2A7A43;
+  --bad:#D23434; --bad-bg:#F9DADA; --sym-a:#E0582F; --sym-b:#1F6FD1;
+  --r0:#F6C3D3; --r1:#FFDDA1; --r2:#C5E6BF; --r3:#BBD6F6; --r4:#D9C7F4; --r5:#F1EB9F; --r6:#BAE8E2; --r7:#F1CDB7; --r8:#D5DBE4;
+  --font-display:'Bricolage Grotesque','Avenir Next','Segoe UI',system-ui,sans-serif;
+  --font-body:'DM Sans',system-ui,-apple-system,'Segoe UI',sans-serif;
+  --radius:14px;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0E121A; --surface:#181E2A; --sunk:#232B3A; --ink:#E8ECF3; --muted:#9AA4B7; --line:#333C4E; --edge:#C9D1DE; --block:#06080C;
+  --bloom:#F0679A; --even:#3CC1B8; --trail:#F2A33F; --six:#8E9AFF; --plots:#B98CFF; --weave:#FF8A66; --mini:#5FC582;
+  --bad:#FF6E6E; --bad-bg:#4A1F25; --sym-a:#FF8558; --sym-b:#5AA2FF;
+  --r0:#69324A; --r1:#6B5124; --r2:#33593A; --r3:#2D4B71; --r4:#4E3C70; --r5:#5B5726; --r6:#285C57; --r7:#684333; --r8:#3B4351;
+  color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0E121A; --surface:#181E2A; --sunk:#232B3A; --ink:#E8ECF3; --muted:#9AA4B7; --line:#333C4E; --edge:#C9D1DE; --block:#06080C;
+  --bloom:#F0679A; --even:#3CC1B8; --trail:#F2A33F; --six:#8E9AFF; --plots:#B98CFF; --weave:#FF8A66; --mini:#5FC582;
+  --bad:#FF6E6E; --bad-bg:#4A1F25; --sym-a:#FF8558; --sym-b:#5AA2FF;
+  --r0:#69324A; --r1:#6B5124; --r2:#33593A; --r3:#2D4B71; --r4:#4E3C70; --r5:#5B5726; --r6:#285C57; --r7:#684333; --r8:#3B4351;
+  color-scheme:dark}
+html,body{background:var(--bg);color:var(--ink)}
+body{font-family:var(--font-body);font-size:16px;line-height:1.45;-webkit-tap-highlight-color:transparent}
+#app{max-width:460px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:12px 40px}
+button{font:inherit;color:inherit;touch-action:manipulation;cursor:pointer}
+button:focus-visible,a:focus-visible,summary:focus-visible,textarea:focus-visible{outline:3px solid var(--c,var(--six));outline-offset:2px}
+h1,h2,h3{font-family:var(--font-display);font-weight:800;letter-spacing:-.02em;margin:0;text-wrap:balance}
+a{color:inherit}
+
+/* ---------- hub ---------- */
+.hub-top{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;padding-block:18px 6px}
+.hub-top h1{font-size:2.1rem;line-height:1}
+.hub-date{color:var(--muted);font-size:.9rem;margin-top:6px}
+.issue{font-family:var(--font-display);font-weight:600;font-size:.8rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);text-align:right;white-space:nowrap}
+.issue b{display:block;font-size:1.6rem;letter-spacing:-.02em;color:var(--ink);font-weight:800}
+.meter{display:flex;gap:5px;margin-block:14px 6px}
+.meter i{flex:1;height:6px;border-radius:3px;background:var(--sunk)}
+.meter i.on{background:var(--c)}
+.meter-label{font-size:.8rem;color:var(--muted);margin-bottom:14px}
+.tiles{display:flex;flex-direction:column;gap:10px}
+.tile{display:grid;grid-template-columns:56px 1fr auto;align-items:center;gap:14px;padding:12px 14px 12px 12px;background:var(--surface);border-radius:var(--radius);text-decoration:none;color:inherit;border:1px solid var(--line)}
+.tile:active{transform:scale(.99)}
+.ico{width:56px;height:56px;border-radius:12px;background:color-mix(in srgb,var(--c) 14%,var(--surface));display:grid;place-items:center;flex:none}
+.ico svg{width:36px;height:36px}
+.tile h2{font-size:1.2rem;line-height:1.1}
+.tile p{margin:3px 0 0;color:var(--muted);font-size:.84rem;line-height:1.3}
+.tile .st{font-size:.8rem;font-weight:700;text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.tile .st small{font-weight:500;color:var(--muted)}
+.pill{display:inline-block;padding:4px 10px;border-radius:999px;background:var(--c);color:var(--surface);font-size:.78rem;font-weight:700}
+.pill.ghost{background:transparent;color:var(--c);box-shadow:inset 0 0 0 1.5px var(--c)}
+.foot{margin-top:22px;display:flex;flex-direction:column;gap:10px;align-items:center;color:var(--muted);font-size:.85rem;text-align:center}
+.foot .row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.btn{border:0;border-radius:999px;padding:11px 18px;font-weight:700;background:var(--sunk);text-decoration:none;display:inline-block;text-align:center}
+.btn.solid{background:var(--c,var(--ink));color:var(--surface)}
+.btn.small{padding:8px 14px;font-size:.88rem}
+.linkbtn{background:none;border:0;color:var(--muted);text-decoration:underline;font-size:.85rem;padding:6px}
+
+/* ---------- game page ---------- */
+.gp-head{display:flex;gap:14px;align-items:center;margin-block:4px 16px}
+.gp-head h1{font-size:2rem;color:var(--c);line-height:1}
+.gp-head p{margin:4px 0 0;color:var(--muted);font-size:.9rem;line-height:1.3}
+.today{display:flex;justify-content:space-between;align-items:center;gap:12px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;text-decoration:none}
+.today b{font-family:var(--font-display);font-size:1.1rem}
+.today small{display:block;color:var(--muted);font-size:.84rem}
+.lv-head{display:flex;justify-content:space-between;align-items:baseline;margin:22px 0 10px}
+.lv-head h2{font-size:1.15rem}
+.lv-head span{color:var(--muted);font-size:.85rem;font-variant-numeric:tabular-nums}
+.levels{display:grid;grid-template-columns:repeat(auto-fill,minmax(48px,1fr));gap:6px}
+.levels a{aspect-ratio:1;display:grid;place-items:center;border-radius:10px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line);text-decoration:none;font-weight:700;font-variant-numeric:tabular-nums;font-size:.95rem;position:relative}
+.levels a.done{background:var(--c);color:var(--surface);box-shadow:none}
+.levels a.wip{box-shadow:inset 0 0 0 2px var(--c);color:var(--c)}
+.levels a.next{outline:2px dashed var(--c);outline-offset:2px}
+.tier{grid-column:1/-1;font-size:.75rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:700;margin-top:8px}
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-top:16px}
+.stats div{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:10px;text-align:center}
+.stats b{display:block;font-family:var(--font-display);font-size:1.3rem;font-variant-numeric:tabular-nums}
+.stats small{color:var(--muted);font-size:.75rem}
+
+/* ---------- puzzle shell ---------- */
+.bar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding-block:6px 14px}
+.back{color:var(--muted);text-decoration:none;font-weight:500;font-size:.95rem;padding:8px 0}
+.bar h1{font-size:1.5rem;color:var(--c)}
+.clock{justify-self:end;font-variant-numeric:tabular-nums;font-weight:700;color:var(--muted);font-size:.95rem}
+.sub{text-align:center;color:var(--muted);font-size:.85rem;margin:-8px 0 12px}
+.board{display:grid;grid-template-columns:repeat(var(--n),minmax(0,1fr));grid-template-rows:repeat(var(--m,var(--n)),minmax(0,1fr));width:100%;max-width:440px;aspect-ratio:var(--n)/var(--m,var(--n));margin:0 auto;touch-action:none;user-select:none;-webkit-user-select:none;position:relative;border-radius:10px;overflow:hidden;background:var(--surface);box-shadow:0 0 0 2px var(--edge)}
+.cell{position:relative;display:grid;place-items:center;min-width:0;min-height:0;overflow:hidden}
+.tools{display:flex;gap:8px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+.tools .btn{min-width:80px}
+.btn.on{background:var(--c);color:var(--surface)}
+.hint{text-align:center;color:var(--muted);font-size:.82rem;margin:10px 0 0}
+.howto{margin-top:18px;background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);padding:4px 16px}
+.howto summary{font-weight:700;padding:10px 0;cursor:pointer}
+.howto ul{margin:0 0 12px;padding-left:20px;color:var(--muted);font-size:.92rem}
+.howto li{margin-bottom:6px}
+.solved .board{box-shadow:0 0 0 3px var(--c)}
+.report{display:block;margin:14px auto 0}
+
+/* sheets */
+.sheet{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--surface);border-top:1px solid var(--line);box-shadow:0 -10px 40px rgba(0,0,0,.18);border-radius:20px 20px 0 0;padding:20px max(16px,env(safe-area-inset-right,0px)) calc(20px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));animation:up .35s cubic-bezier(.2,.9,.3,1.2);max-height:88vh;overflow:auto}
+.sheet .in{max-width:460px;margin:0 auto;display:flex;flex-direction:column;gap:12px;align-items:center;text-align:center}
+.sheet h2{font-size:1.6rem;color:var(--c,var(--ink))}
+.sheet .t{font-variant-numeric:tabular-nums;color:var(--muted)}
+.sheet .row{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.sheet .x{position:absolute;right:max(12px,env(safe-area-inset-right,0px));top:10px;background:none;border:0;font-size:1.4rem;color:var(--muted);padding:6px 10px}
+.sheet textarea{width:100%;box-sizing:border-box;min-height:120px;border-radius:12px;border:1px solid var(--line);background:var(--bg);color:var(--ink);padding:12px;font:inherit;resize:vertical}
+.sheet .note{font-size:.82rem;color:var(--muted);text-align:left;width:100%}
+.scrim{position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:19}
+@keyframes up{from{transform:translateY(100%)}to{transform:none}}
+@keyframes pop{0%{transform:scale(.6)}70%{transform:scale(1.12)}100%{transform:scale(1)}}
+@media (prefers-reduced-motion: reduce){.sheet,.pop{animation:none!important}}
+.toast{position:fixed;left:50%;bottom:calc(24px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:8px 16px;border-radius:999px;font-size:.88rem;font-weight:700;z-index:30;max-width:80vw;text-align:center}
+
+/* ---------- Bloom ---------- */
+.bloom .cell{cursor:pointer}
+.bloom .cell .x{color:var(--ink);opacity:.5;font-size:clamp(13px,4vw,20px);font-weight:500;line-height:1}
+.bloom .cell .x.auto{opacity:.22}
+.bloom .cell svg{width:68%;height:68%}
+.bloom .cell.bad::after{content:"";position:absolute;inset:10%;border-radius:50%;background:var(--bad);opacity:.28}
+.pop{animation:pop .25s ease-out}
+
+/* ---------- Even ---------- */
+.even .cell{border-right:1px solid var(--line);border-bottom:1px solid var(--line);cursor:pointer}
+.even .cell.given{background:var(--sunk);cursor:default}
+.even .cell.bad{background:var(--bad-bg)}
+.sym{width:54%;height:54%}
+.sym.a{border-radius:50%;background:var(--sym-a)}
+.sym.b{border-radius:4px;background:var(--sym-b);transform:rotate(45deg) scale(.86)}
+.edge{position:absolute;transform:translate(-50%,-50%);width:20px;height:20px;border-radius:50%;background:var(--surface);box-shadow:0 0 0 1.5px var(--line);display:grid;place-items:center;font-weight:800;font-size:13px;line-height:1;color:var(--ink);pointer-events:none;z-index:2}
+.edge.bad{color:var(--bad);box-shadow:0 0 0 2px var(--bad)}
+.legend{display:flex;gap:16px;justify-content:center;margin-top:12px;color:var(--muted);font-size:.85rem;align-items:center;flex-wrap:wrap}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend .sym{width:14px;height:14px;display:inline-block}
+
+/* ---------- Trail ---------- */
+.trail .cell{border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.trail .cell.on{background:color-mix(in srgb,var(--c) 16%,var(--surface))}
+svg.path{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:1}
+.badge{position:relative;z-index:2;width:62%;aspect-ratio:1;border-radius:50%;background:var(--ink);color:var(--surface);display:grid;place-items:center;font-family:var(--font-display);font-weight:800;font-size:clamp(13px,4.4vw,22px);font-variant-numeric:tabular-nums}
+.badge.hit{background:var(--c);color:var(--surface)}
+
+/* ---------- Six ---------- */
+.six .cell{border-right:1px solid var(--line);border-bottom:1px solid var(--line);font-family:var(--font-display);font-size:clamp(20px,7vw,32px);font-weight:600;color:var(--c);cursor:pointer}
+.six .cell.given{color:var(--ink);font-weight:800}
+.six .cell.peer{background:color-mix(in srgb,var(--c) 7%,var(--surface))}
+.six .cell.same{background:color-mix(in srgb,var(--c) 18%,var(--surface))}
+.six .cell.sel{background:color-mix(in srgb,var(--c) 30%,var(--surface))}
+.six .cell.bad{color:var(--bad)}
+.six .cell.br{border-right:2.5px solid var(--edge)}
+.six .cell.bb{border-bottom:2.5px solid var(--edge)}
+.notes{display:grid;grid-template-columns:repeat(3,1fr);width:86%;font-size:clamp(9px,2.6vw,12px);font-family:var(--font-body);color:var(--muted);text-align:center;line-height:1.25}
+.pad{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:14px}
+.pad button{border:0;border-radius:10px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line);height:52px;font-family:var(--font-display);font-size:1.4rem;font-weight:700}
+.pad button:active{background:var(--sunk)}
+.pad .del{font-family:var(--font-body);font-size:1rem}
+
+/* ---------- Plots ---------- */
+.plots .cell{border-right:1px solid var(--line);border-bottom:1px solid var(--line)}
+.plots .clue{position:relative;z-index:3;font-family:var(--font-display);font-weight:800;font-size:clamp(15px,5vw,24px);font-variant-numeric:tabular-nums}
+.rect{position:absolute;z-index:2;border-radius:8px;box-sizing:border-box;border:2.5px solid var(--edge);pointer-events:none}
+.rect.bad{border-style:dashed;border-color:var(--bad);background:color-mix(in srgb,var(--bad) 10%,transparent)!important}
+.rect.preview{border:2.5px dashed var(--c);background:color-mix(in srgb,var(--c) 18%,transparent)}
+.rect .dim{position:absolute;right:4px;bottom:2px;font-size:11px;font-weight:700;color:var(--ink);opacity:.7}
+
+/* ---------- Weave ---------- */
+.weave{max-width:380px}
+.weave .cell{font-family:var(--font-display);font-weight:700;font-size:clamp(18px,6.4vw,28px);z-index:2}
+.weave .cell span{position:relative;z-index:2;width:74%;aspect-ratio:1;display:grid;place-items:center;border-radius:50%}
+.weave .cell.found span{background:var(--c);color:var(--surface)}
+.weave .cell.sel span{background:var(--ink);color:var(--surface)}
+.weave .cell.hinted span{box-shadow:inset 0 0 0 2.5px var(--c)}
+.theme{text-align:center;margin:0 0 12px}
+.theme small{display:block;font-size:.72rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);font-weight:700}
+.theme b{font-family:var(--font-display);font-size:1.25rem}
+.current{text-align:center;min-height:2em;margin-top:10px;font-family:var(--font-display);font-weight:800;font-size:1.3rem;letter-spacing:.08em}
+.found-list{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;margin-top:6px}
+.found-list span{padding:3px 10px;border-radius:999px;background:var(--sunk);font-size:.82rem;font-weight:700;letter-spacing:.04em}
+.found-list span.ok{background:var(--c);color:var(--surface)}
+
+/* ---------- Mini ---------- */
+.mini .cell{border-right:1.5px solid var(--line);border-bottom:1.5px solid var(--line);font-family:var(--font-display);font-weight:600;font-size:clamp(22px,8vw,36px);text-transform:uppercase;cursor:pointer}
+.mini .cell.blk{background:var(--block);cursor:default}
+.mini .cell.word{background:color-mix(in srgb,var(--c) 16%,var(--surface))}
+.mini .cell.sel{background:color-mix(in srgb,var(--c) 42%,var(--surface))}
+.mini .cell.wrong{color:var(--bad)}
+.mini .cell.rev{color:var(--six)}
+.mini .num{position:absolute;top:3px;left:4px;font-family:var(--font-body);font-size:clamp(9px,2.6vw,12px);font-weight:700;line-height:1;color:var(--ink)}
+.cluebar{display:grid;grid-template-columns:40px 1fr 40px;align-items:center;background:color-mix(in srgb,var(--c) 16%,var(--surface));border-radius:12px;margin-top:12px;min-height:56px}
+.cluebar button{border:0;background:none;height:100%;font-size:1.3rem;color:var(--muted)}
+.cluebar p{margin:0;font-weight:500;padding:8px 2px;line-height:1.3}
+.cluebar b{font-family:var(--font-display);margin-right:6px}
+.kb{display:flex;flex-direction:column;gap:6px;margin-top:10px}
+.kb div{display:flex;gap:4px;justify-content:center}
+.kb button{flex:1;max-width:40px;height:48px;border:0;border-radius:7px;background:var(--surface);box-shadow:inset 0 0 0 1px var(--line);font-weight:700;font-size:1rem;padding:0}
+.kb button.wide{max-width:64px;flex:1.6;font-size:.85rem}
+.kb button:active{background:var(--sunk)}
+.clues{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:16px;font-size:.88rem}
+.clues h3{font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 6px}
+.clues ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:4px}
+.clues li{padding:4px 6px;border-radius:6px;cursor:pointer;min-width:0}
+.clues li b{margin-right:6px}
+.clues li.cur{background:color-mix(in srgb,var(--c) 16%,var(--surface))}
+.clues li.ok{color:var(--muted);text-decoration:line-through}
+@media (max-width:360px){.clues{grid-template-columns:1fr}}
+</style>
+
+<style>:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}[hidden]{display:none!important}</style>
+</head>
+<body>
+<div id="app"></div>
+
+<script>
+(() => {
+'use strict';
+const APP_VERSION = '2.0';
+/* Where feedback, error reports and results go. Empty = kept on this device only. */
+const CONFIG = { endpoint: '' };
+
+/* ================= utilities ================= */
+const app = document.getElementById('app');
+const store = {
+  get(k){ try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : null; } catch(e){ return null; } },
+  set(k,v){ try { localStorage.setItem(k, JSON.stringify(v)); } catch(e){} },
+  keys(){ try { return Object.keys(localStorage); } catch(e){ return []; } }
+};
+const pad2 = n => String(n).padStart(2,'0');
+const keyOf = d => d.getFullYear()+'-'+pad2(d.getMonth()+1)+'-'+pad2(d.getDate());
+const todayKey = () => keyOf(new Date());
+const EPOCH = Date.UTC(2026,10,16);
+const dayNum = key => { const [y,m,d] = key.split('-').map(Number); return Math.round((Date.UTC(y,m-1,d)-EPOCH)/864e5)+1; };
+const fmt = s => Math.floor(s/60)+':'+pad2(s%60);
+function seedOf(str){ let h = 2166136261; for (let i=0;i<str.length;i++){ h ^= str.charCodeAt(i); h = Math.imul(h,16777619); } return h>>>0; }
+function rng(str){ let a = seedOf(str); return () => { a = a+0x6D2B79F5|0; let t = Math.imul(a^a>>>15,1|a); t = t+Math.imul(t^t>>>7,61|t)^t; return ((t^t>>>14)>>>0)/4294967296; }; }
+function shuffle(a,r){ for (let i=a.length-1;i>0;i--){ const j = Math.floor(r()*(i+1)); [a[i],a[j]] = [a[j],a[i]]; } return a; }
+const range = n => [...Array(n).keys()];
+const esc = s => String(s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const LEVELS = 75;
+function cellFromPoint(board, cols, rows, e, inner){
+  const r = board.getBoundingClientRect();
+  const fx = (e.clientX-r.left)/r.width*cols, fy = (e.clientY-r.top)/r.height*rows;
+  const c = Math.floor(fx), w = Math.floor(fy);
+  if (c<0||w<0||c>=cols||w>=rows) return -1;
+  if (inner){ const dx=fx-c-.5, dy=fy-w-.5; if (dx*dx+dy*dy>inner*inner) return -2; }
+  return w*cols+c;
+}
+function toast(msg){ document.querySelectorAll('.toast').forEach(t=>t.remove()); const t = document.createElement('div'); t.className='toast'; t.textContent=msg; document.body.appendChild(t); setTimeout(()=>t.remove(),1800); }
+
+/* ================= reporting: feedback, errors, results ================= */
+const OUTBOX='pp:outbox', LOG='pp:log';
+function ctx(){ return {v:APP_VERSION, at:new Date().toISOString(), where:location.hash||'#', ua:navigator.userAgent, host:location.host||'file', w:innerWidth, h:innerHeight}; }
+function post(p){
+  if (!CONFIG.endpoint) return Promise.reject(new Error('no endpoint'));
+  return fetch(CONFIG.endpoint,{method:'POST',mode:'no-cors',headers:{'Content-Type':'text/plain;charset=utf-8'},body:JSON.stringify(p),keepalive:true});
+}
+function send(p){
+  p = Object.assign(ctx(), p);
+  post(p).catch(()=>{ const q=store.get(OUTBOX)||[]; q.push(p); store.set(OUTBOX,q.slice(-200)); });
+}
+function flushOutbox(){
+  if (!CONFIG.endpoint) return; const q=store.get(OUTBOX)||[]; if (!q.length) return;
+  store.set(OUTBOX,[]); q.forEach(p=>post(p).catch(()=>{ const r=store.get(OUTBOX)||[]; r.push(p); store.set(OUTBOX,r); }));
+}
+let errCount=0; const errSeen=new Set();
+function logError(kind,msg,stack){
+  const sig=kind+msg; if (errSeen.has(sig)||errCount>15) return; errSeen.add(sig); errCount++;
+  const entry={type:'error',kind,msg:String(msg).slice(0,500),stack:String(stack||'').slice(0,1500),game:cur&&cur.g.id,puzzle:cur&&cur.pid};
+  const log=store.get(LOG)||[]; log.push(Object.assign({at:new Date().toISOString()},entry)); store.set(LOG,log.slice(-50));
+  send(entry);
+}
+window.addEventListener('error',e=>logError('error',e.message,e.error&&e.error.stack));
+window.addEventListener('unhandledrejection',e=>logError('promise',e.reason&&e.reason.message||e.reason,e.reason&&e.reason.stack));
+function safe(fn){ return function(...a){ try { return fn.apply(this,a); } catch(err){ logError('handler',err.message,err.stack); toast('Something went wrong. It was logged.'); } }; }
+
+/* ================= generators ================= */
+function hamPath(r,cols,rows,iters){
+  let path=[]; for (let R=0;R<rows;R++) for (let k=0;k<cols;k++) path.push(R*cols+(R%2?cols-1-k:k));
+  const nb = i => { const R=Math.floor(i/cols),C=i%cols,o=[]; if (R>0) o.push(i-cols); if (R<rows-1) o.push(i+cols); if (C>0) o.push(i-1); if (C<cols-1) o.push(i+1); return o; };
+  for (let t=0;t<iters;t++){
+    if (r()<.5) path.reverse();
+    const end=path[path.length-1], prev=path[path.length-2];
+    const cs=nb(end).filter(x=>x!==prev), v=cs[Math.floor(r()*cs.length)], i=path.indexOf(v);
+    path = path.slice(0,i+1).concat(path.slice(i+1).reverse());
+  }
+  return path;
+}
+// --- Six
+const boxOf = i => Math.floor(Math.floor(i/6)/2)*2 + Math.floor((i%6)/3);
+function sixOk(g,i,v){ const R=Math.floor(i/6),C=i%6,B=boxOf(i); for (let j=0;j<36;j++){ if (j===i||g[j]!==v) continue; if (Math.floor(j/6)===R||j%6===C||boxOf(j)===B) return false; } return true; }
+function sixCount(p,lim){ const i = p.indexOf(0); if (i<0) return 1; let n=0; for (let v=1;v<=6&&n<lim;v++){ if (sixOk(p,i,v)){ p[i]=v; n+=sixCount(p,lim-n); p[i]=0; } } return n; }
+function genSix(r,t){
+  const g = Array(36).fill(0);
+  (function fill(i){ if (i===36) return true; for (const v of shuffle([1,2,3,4,5,6],r)){ if (sixOk(g,i,v)){ g[i]=v; if (fill(i+1)) return true; g[i]=0; } } return false; })(0);
+  const sol = g.slice(), puz = sol.slice(); let givens = 36; const floor=Math.round(20-7*t);
+  for (const i of shuffle(range(36),r)){ if (givens<=floor) break; const v=puz[i]; puz[i]=0; if (sixCount(puz.slice(),2)!==1) puz[i]=v; else givens--; }
+  return {sol,puz};
+}
+// --- Even
+function evenLineOk(g,i,N){
+  const R=Math.floor(i/N),C=i%N,v=g[i]; let rc=0,cc=0;
+  for (let k=0;k<N;k++){ if (g[R*N+k]===v) rc++; if (g[k*N+C]===v) cc++; }
+  if (rc>N/2||cc>N/2) return false;
+  for (let s=Math.max(0,C-2);s<=Math.min(N-3,C);s++){ const a=g[R*N+s]; if (a>=0&&a===g[R*N+s+1]&&a===g[R*N+s+2]) return false; }
+  for (let s=Math.max(0,R-2);s<=Math.min(N-3,R);s++){ const a=g[s*N+C]; if (a>=0&&a===g[(s+1)*N+C]&&a===g[(s+2)*N+C]) return false; }
+  return true;
+}
+function evenCount(giv,edges,lim){
+  const N=6,g=giv.slice(),at=range(36).map(()=>[]); let cnt=0;
+  edges.forEach(e=>{at[e.a].push(e);at[e.b].push(e);});
+  const ok = i => { if (!evenLineOk(g,i,N)) return false; for (const e of at[i]){ const o=e.a===i?e.b:e.a; if (g[o]<0) continue; if (e.t==='=' ? g[o]!==g[i] : g[o]===g[i]) return false; } return true; };
+  (function rec(i){ if (cnt>=lim) return; while (i<36&&giv[i]>=0) i++; if (i===36){ cnt++; return; } for (const v of [0,1]){ g[i]=v; if (ok(i)) rec(i+1); } g[i]=-1; })(0);
+  return cnt;
+}
+function genEven(r,t){
+  const N=6,g=Array(36).fill(-1);
+  (function fill(i){ if (i===36) return true; for (const v of shuffle([0,1],r)){ g[i]=v; if (evenLineOk(g,i,N)&&fill(i+1)) return true; } g[i]=-1; return false; })(0);
+  const sol=g.slice(), all=[];
+  for (let i=0;i<36;i++){ if (i%N<N-1) all.push({a:i,b:i+1}); if (i<30) all.push({a:i,b:i+N}); }
+  let edges = shuffle(all,r).slice(0,10).map(e=>({a:e.a,b:e.b,t:sol[e.a]===sol[e.b]?'=':'x'}));
+  const giv = sol.slice(); let gc=36; const gFloor=Math.round(11-5*t), eFloor=Math.round(7-3*t);
+  for (const i of shuffle(range(36),r)){ if (gc<=gFloor) break; const v=giv[i]; giv[i]=-1; if (evenCount(giv,edges,2)===1){ gc--; continue; } giv[i]=v; }
+  for (const e of shuffle(edges.slice(),r)){ if (edges.length<=eFloor) break; const rest=edges.filter(x=>x!==e); if (evenCount(giv,rest,2)===1) edges=rest; }
+  return {sol,giv,edges};
+}
+// --- Bloom
+function bloomCount(reg,n,lim){
+  let cnt=0; const uc=Array(n).fill(false), ur=Array(n).fill(false);
+  (function rec(row,prev){ if (cnt>=lim) return; if (row===n){ cnt++; return; }
+    for (let c=0;c<n;c++){ if (uc[c]||(prev>=0&&Math.abs(prev-c)<=1)) continue; const g=reg[row*n+c]; if (ur[g]) continue; uc[c]=ur[g]=true; rec(row+1,c); uc[c]=ur[g]=false; } })(0,-1);
+  return cnt;
+}
+function regionConnected(reg,n,k){
+  const cells=[]; for (let i=0;i<n*n;i++) if (reg[i]===k) cells.push(i);
+  if (!cells.length) return false;
+  const seen=new Set([cells[0]]), st=[cells[0]];
+  while (st.length){ const i=st.pop(),R=Math.floor(i/n),C=i%n;
+    for (const [dr,dc] of [[1,0],[-1,0],[0,1],[0,-1]]){ const a=R+dr,b=C+dc,j=a*n+b; if (a>=0&&a<n&&b>=0&&b<n&&reg[j]===k&&!seen.has(j)){ seen.add(j); st.push(j); } } }
+  return seen.size===cells.length;
+}
+function genBloom(r,n){
+  let last=null;
+  for (let attempt=0;attempt<8;attempt++){
+    const q=[];
+    (function place(row){ if (row===n) return true; for (const c of shuffle(range(n),r)){ if (q.includes(c)||(row>0&&Math.abs(q[row-1]-c)<=1)) continue; q[row]=c; if (place(row+1)) return true; } q.length=row; return false; })(0);
+    const reg=Array(n*n).fill(-1); q.forEach((c,row)=>reg[row*n+c]=row);
+    const w = range(n).map(()=>0.15+r()*r()), tot = w.reduce((a,b)=>a+b,0);
+    let left=n*n-n, guard=0;
+    while (left>0 && guard++<100000){
+      let x=r()*tot,k=0; while (x>w[k]&&k<n-1){ x-=w[k]; k++; }
+      const fr=[];
+      for (let i=0;i<n*n;i++){ if (reg[i]!==k) continue; const R=Math.floor(i/n),C=i%n;
+        for (const [dr,dc] of [[1,0],[-1,0],[0,1],[0,-1]]){ const a=R+dr,b=C+dc; if (a>=0&&a<n&&b>=0&&b<n&&reg[a*n+b]<0) fr.push(a*n+b); } }
+      if (!fr.length) continue;
+      reg[fr[Math.floor(r()*fr.length)]]=k; left--;
+    }
+    const seed=new Set(q.map((c,row)=>row*n+c));
+    let cnt=bloomCount(reg,n,60);
+    for (let it=0;it<4000&&cnt>1;it++){
+      const i=Math.floor(r()*n*n); if (seed.has(i)) continue;
+      const R=Math.floor(i/n),C=i%n,nbr=[];
+      for (const [dr,dc] of [[1,0],[-1,0],[0,1],[0,-1]]){ const a=R+dr,b=C+dc; if (a>=0&&a<n&&b>=0&&b<n&&reg[a*n+b]!==reg[i]) nbr.push(reg[a*n+b]); }
+      if (!nbr.length) continue;
+      const old=reg[i]; reg[i]=nbr[Math.floor(r()*nbr.length)];
+      if (!regionConnected(reg,n,old)){ reg[i]=old; continue; }
+      const c2=bloomCount(reg,n,60);
+      if (c2<=cnt) cnt=c2; else reg[i]=old;
+    }
+    last={n,reg,sol:q};
+    if (cnt===1) break;
+  }
+  const perm = shuffle(range(9),r);
+  last.color = range(n).map(k=>perm[k]);
+  return last;
+}
+// --- Trail
+function genTrail(r,n,t){
+  let path=hamPath(r,n,n,n*n*80);
+  const L=path.length, K=Math.max(5,Math.round(n+4-5*t)+Math.floor(r()*2));
+  const idx=new Set([0,L-1]); let tries=0;
+  while (idx.size<K && tries++<800){ const k=1+Math.floor(r()*(L-2)); if ([...idx].every(x=>Math.abs(x-k)>2)) idx.add(k); }
+  const stops=[...idx].sort((a,b)=>a-b).map(k=>path[k]);
+  const nums={}; stops.forEach((c,i)=>nums[c]=i+1);
+  const step=new Set(); for (let i=0;i<L-1;i++){ const a=path[i],b=path[i+1]; step.add(Math.min(a,b)+'-'+Math.max(a,b)); }
+  const cand=[]; for (let i=0;i<n*n;i++){ if (i%n<n-1&&!step.has(i+'-'+(i+1))) cand.push(i+'-'+(i+1)); if (i<n*n-n&&!step.has(i+'-'+(i+n))) cand.push(i+'-'+(i+n)); }
+  const walls = shuffle(cand,r).slice(0,2+Math.floor(r()*(n-2)));
+  return {n,nums,last:K,walls,sol:path};
+}
+// --- Plots
+function plotsSolve(n,clues,lim){
+  const clueAt=new Map(clues.map((c,k)=>[c.i,k]));
+  const cands=clues.map(c=>{ const R=Math.floor(c.i/n),C=c.i%n,out=[];
+    for (let h=1;h<=c.v;h++){ if (c.v%h) continue; const w=c.v/h; if (h>n||w>n) continue;
+      for (let r0=R-h+1;r0<=R;r0++) for (let c0=C-w+1;c0<=C;c0++){
+        if (r0<0||c0<0||r0+h>n||c0+w>n) continue; let ok=true, cells=[];
+        for (let y=r0;y<r0+h&&ok;y++) for (let x=c0;x<c0+w;x++){ const j=y*n+x; if (j!==c.i&&clueAt.has(j)){ ok=false; break; } cells.push(j); }
+        if (ok) out.push({r0,c0,h,w,cells}); } }
+    return out; });
+  const used=new Uint8Array(n*n), done=new Array(clues.length).fill(false); let cnt=0;
+  (function rec(left){ if (cnt>=lim) return; if (!left){ cnt++; return; }
+    let best=-1,bo=null;
+    for (let k=0;k<clues.length;k++){ if (done[k]) continue; const o=cands[k].filter(c=>c.cells.every(j=>!used[j])); if (!o.length) return; if (!bo||o.length<bo.length){ best=k; bo=o; } }
+    // every empty cell must still be coverable is implied by area sum
+    done[best]=true;
+    for (const c of bo){ c.cells.forEach(j=>used[j]=1); rec(left-1); c.cells.forEach(j=>used[j]=0); if (cnt>=lim) break; }
+    done[best]=false; })(clues.length);
+  return cnt;
+}
+function genPlots(r,n,t){
+  const maxA=Math.round(5+t*5);
+  let last=null;
+  for (let attempt=0;attempt<300;attempt++){
+    const own=Array(n*n).fill(-1), rects=[];
+    for (let i=0;i<n*n;i++){ if (own[i]>=0) continue; const R=Math.floor(i/n),C=i%n, opts=[];
+      for (let h=1;R+h<=n;h++) for (let w=1;C+w<=n;w++){ const a=h*w; if (a>maxA) continue; let free=true;
+        for (let y=R;y<R+h&&free;y++) for (let x=C;x<C+w;x++) if (own[y*n+x]>=0){ free=false; break; }
+        if (free) opts.push({h,w,a}); }
+      const weighted=opts.map(o=>({o,wt:o.a===1?0.05:o.a===2?0.6:1+(o.h===o.w?0.2:0)}));
+      let tot=weighted.reduce((s,x)=>s+x.wt,0), x=r()*tot, pick=weighted[0].o;
+      for (const wv of weighted){ x-=wv.wt; if (x<=0){ pick=wv.o; break; } }
+      const cells=[]; for (let y=R;y<R+pick.h;y++) for (let xx=C;xx<C+pick.w;xx++){ own[y*n+xx]=rects.length; cells.push(y*n+xx); }
+      rects.push({r0:R,c0:C,h:pick.h,w:pick.w,cells});
+    }
+    const clues=rects.map(rc=>({i:rc.cells[Math.floor(r()*rc.cells.length)],v:rc.cells.length}));
+    last={n,clues,sol:rects};
+    if (plotsSolve(n,clues,2)===1) break;
+  }
+  return last;
+}
+// --- Weave
+const THEMES = [["In the fruit bowl",["APPLE","MANGO","PEACH","LEMON","GRAPE","PLUM","KIWI","PEAR","BANANA","CHERRY"]],["Breakfast table",["TOAST","BACON","EGGS","WAFFLE","CEREAL","JUICE","COFFEE","BAGEL","SYRUP"]],["Kitchen drawer",["SPOON","FORK","KNIFE","LADLE","WHISK","TONGS","PEELER","GRATER"]],["Ocean life",["SHARK","WHALE","SQUID","CRAB","SEAL","CORAL","OCTOPUS","EEL","TUNA"]],["Weather report",["RAIN","SNOW","SLEET","STORM","CLOUD","WIND","HAIL","FOG","SUNNY"]],["Things with wheels",["BIKE","TRUCK","WAGON","SCOOTER","TRAIN","CART","BUS","VAN"]],["On the farm",["COW","PIG","GOAT","HORSE","SHEEP","BARN","TRACTOR","HAY","HEN"]],["Desk supplies",["PEN","PENCIL","STAPLER","TAPE","ERASER","RULER","MARKER","CLIP"]],["Baseball",["BAT","BASE","GLOVE","PITCH","INNING","STRIKE","HOMER","OUT","DUGOUT"]],["In the garden",["ROSE","TULIP","SEED","HOSE","SHOVEL","SOIL","WEED","DAISY","RAKE"]],["Musical instruments",["DRUM","PIANO","FLUTE","HARP","TUBA","VIOLIN","CELLO","BANJO","OBOE"]],["Colors",["RED","BLUE","GREEN","PURPLE","ORANGE","YELLOW","PINK","TEAL","BROWN"]],["Body parts",["ARM","LEG","HAND","FOOT","KNEE","ELBOW","NOSE","CHIN","ANKLE","WRIST"]],["Camping trip",["TENT","FIRE","LANTERN","CANOE","HIKE","TRAIL","SMORES","COOLER","MAP"]],["At the beach",["SAND","WAVE","TOWEL","SHELL","SURF","TIDE","DUNE","BUCKET","UMBRELLA"]],["Pizza toppings",["CHEESE","OLIVE","ONION","PEPPER","BASIL","HAM","SAUSAGE","MUSHROOM"]],["Card games",["POKER","RUMMY","BRIDGE","HEARTS","SPADES","SNAP","SOLO","WAR"]],["Board game night",["DICE","PAWN","TOKEN","BOARD","CARD","SPINNER","TIMER","TURN"]],["Planets and space",["MARS","EARTH","VENUS","SATURN","PLUTO","ORBIT","COMET","MOON","STAR"]],["Coffee shop",["LATTE","MOCHA","BEAN","CUP","FOAM","BARISTA","DECAF","ICED"]],["Office life",["DESK","EMAIL","MEMO","BOSS","CHAIR","MEETING","STAPLER","BREAK"]],["Trees",["OAK","PINE","MAPLE","BIRCH","ELM","CEDAR","WILLOW","ASPEN","ASH"]],["Birds",["ROBIN","HAWK","EAGLE","OWL","CROW","DOVE","WREN","FINCH","PARROT"]],["Dog breeds",["PUG","BEAGLE","BOXER","POODLE","HUSKY","CORGI","COLLIE","TERRIER"]],["Things that are cold",["ICE","SNOW","FROST","GLACIER","FREEZER","IGLOO","POPSICLE"]],["Kitchen appliances",["OVEN","STOVE","TOASTER","BLENDER","FRIDGE","MIXER","KETTLE"]],["Clothing",["SHIRT","PANTS","SOCKS","JACKET","SCARF","HAT","DRESS","SKIRT","VEST"]],["Shoes",["BOOT","SANDAL","SNEAKER","LOAFER","PUMP","CLOG","HEEL","SLIPPER"]],["Jobs",["CHEF","NURSE","PILOT","JUDGE","BAKER","TEACHER","FARMER","DOCTOR"]],["In a toolbox",["HAMMER","WRENCH","SAW","DRILL","NAIL","SCREW","LEVEL","PLIERS"]],["Desserts",["CAKE","PIE","COOKIE","BROWNIE","FUDGE","TART","CUPCAKE","SUNDAE"]],["Vegetables",["CARROT","PEA","CORN","BEET","KALE","LEEK","CELERY","RADISH","SPINACH"]],["Spices",["SALT","PEPPER","CUMIN","SAGE","THYME","BASIL","CLOVE","GINGER","MINT"]],["Feelings",["HAPPY","SAD","ANGRY","CALM","PROUD","BORED","EAGER","SCARED"]],["Shapes",["CIRCLE","SQUARE","OVAL","CUBE","CONE","STAR","HEART","DIAMOND"]],["Things in a bathroom",["SOAP","TOWEL","SINK","TUB","MIRROR","SHOWER","RAZOR","COMB","BRUSH"]],["Bedroom",["BED","PILLOW","BLANKET","LAMP","DRESSER","CLOSET","SHEET","RUG"]],["Rainy day",["PUDDLE","BOOTS","SPLASH","DRIZZLE","RAINCOAT","GUTTER","CLOUDS"]],["Insects",["ANT","BEE","MOTH","WASP","FLY","GNAT","BEETLE","CRICKET","FLEA"]],["Reptiles",["SNAKE","LIZARD","GECKO","TURTLE","IGUANA","CROC","VIPER","COBRA"]],["Big cats",["LION","TIGER","PUMA","LYNX","JAGUAR","CHEETAH","LEOPARD"]],["Soccer",["GOAL","KICK","BALL","CORNER","PENALTY","HEADER","KEEPER","PITCH","NET"]],["Basketball",["HOOP","DUNK","RIM","COURT","DRIBBLE","PASS","SHOT","GUARD"]],["Swimming pool",["DIVE","LANE","FLOAT","GOGGLES","SPLASH","DECK","LAP","SLIDE"]],["Winter fun",["SLED","SKI","SKATE","SNOWMAN","COCOA","MITTEN","SCARF","IGLOO"]],["Halloween",["GHOST","CANDY","MASK","WITCH","BAT","SPIDER","PUMPKIN","COSTUME"]],["Thanksgiving",["TURKEY","PIE","GRAVY","STUFFING","YAMS","FEAST","PARADE","CORN"]],["Birthday party",["CAKE","CANDLE","GIFT","BALLOON","PARTY","WISH","FROSTING","HAT"]],["Movie night",["POPCORN","SCREEN","TICKET","SEAT","TRAILER","CANDY","SODA","REEL"]],["Road trip",["MAP","GAS","SNACK","ROUTE","MOTEL","MILES","DETOUR","EXIT"]],["Airport",["GATE","PLANE","PILOT","RUNWAY","TICKET","LUGGAGE","TERMINAL"]],["Hospital",["NURSE","DOCTOR","BED","XRAY","CAST","SHOT","CHART","WARD"]],["School",["DESK","BELL","CLASS","RECESS","LOCKER","QUIZ","GRADE","LUNCH","TEST"]],["Library",["BOOK","SHELF","CARD","QUIET","NOVEL","AUTHOR","PAGE","STACKS"]],["Bakery",["BREAD","ROLL","BAGEL","MUFFIN","SCONE","CROISSANT","DONUT","FLOUR"]],["Ice cream shop",["CONE","SCOOP","SPRINKLE","VANILLA","SUNDAE","CUP","MALT","FUDGE"]],["Pirate ship",["MAST","SAIL","PLANK","ANCHOR","PARROT","CANNON","MAP","CHEST","GOLD"]],["Castle",["MOAT","TOWER","KNIGHT","KING","QUEEN","THRONE","DRAGON","GATE"]],["Fairy tales",["WOLF","GIANT","FAIRY","PRINCE","TROLL","WITCH","BEANSTALK","SLIPPER"]],["Music",["SONG","NOTE","BEAT","CHORD","TEMPO","LYRIC","MELODY","CHORUS"]],["Painting",["BRUSH","CANVAS","EASEL","PAINT","COLOR","PALETTE","FRAME","SKETCH"]],["Science lab",["ATOM","CELL","BEAKER","FLASK","TEST","GOGGLES","MAGNET","LENS"]],["Math class",["ADD","SUM","ANGLE","GRAPH","RATIO","DIGIT","TOTAL","MINUS","PLUS"]],["Money",["CASH","COIN","DIME","PENNY","NICKEL","DOLLAR","BANK","WALLET"]],["Gym",["WEIGHTS","MAT","TREADMILL","BENCH","SQUAT","REPS","SWEAT","LOCKER"]],["Yoga class",["POSE","MAT","BREATH","STRETCH","TREE","COBRA","CALM","BLOCK"]],["Phone",["SCREEN","APP","CALL","TEXT","CHARGER","CASE","CAMERA","EMOJI"]],["Computer",["MOUSE","KEYBOARD","SCREEN","FILE","FOLDER","LAPTOP","CURSOR"]],["Gems",["RUBY","PEARL","OPAL","JADE","TOPAZ","GARNET","EMERALD","DIAMOND"]],["Metals",["GOLD","SILVER","IRON","COPPER","TIN","ZINC","STEEL","BRASS"]],["Mountains",["PEAK","SUMMIT","CLIFF","RIDGE","VALLEY","SLOPE","CANYON","TRAIL"]],["Rivers and lakes",["STREAM","CREEK","POND","DELTA","DAM","BANK","RAPIDS","SHORE"]],["City life",["TAXI","SUBWAY","TOWER","CAFE","PARK","STREET","BRIDGE","MUSEUM"]],["Sushi bar",["RICE","ROLL","WASABI","GINGER","TUNA","SALMON","NORI","EEL","CRAB"]],["Italian dinner",["PASTA","PIZZA","RISOTTO","LASAGNA","GELATO","PESTO","RAVIOLI"]],["Taco night",["TACO","SALSA","CHEESE","BEANS","LIME","CILANTRO","SHELL","BEEF"]]];
+function genWeave(r,theme,t){
+  const words=theme[1].map(w=>w.toUpperCase());
+  const dims = t<.3 ? [[5,5],[4,6],[5,6],[4,7],[6,6]] : t<.7 ? [[5,6],[4,7],[6,6],[5,5],[5,7]] : [[6,6],[5,7],[5,6],[6,7],[5,5]];
+  for (const [cols,rows] of dims){ const T=cols*rows;
+    for (let k=0;k<400;k++){ const sh=shuffle(words.slice(),r); let s=0; const pick=[];
+      for (const w of sh){ if (s+w.length<=T){ pick.push(w); s+=w.length; } if (s===T) break; }
+      if (s===T&&pick.length>=4){
+        const path=hamPath(r,cols,rows,cols*rows*60), letters=Array(T), list=[]; let p=0;
+        for (const w of pick){ const cells=path.slice(p,p+w.length); cells.forEach((c,j)=>letters[c]=w[j]); list.push({w,cells}); p+=w.length; }
+        return {cols,rows,letters,words:list,theme:theme[0]};
+      } } }
+  return null;
+}
+// --- Mini
+const MINI = {"grids":["#SLAB#TONEBADGEURGE#DEER#","#GRAM#RAGEHAVENEVEN#RENT#","#PAY#RAPIDUPPERBELLY#RED#","#WRAP#HOPECOURTALTO#TEEN#","#AREA#REAPSMARTPOLL#ARMY#","#SET#CHARTARGUEPULSE#BET#","#VAST#ABLEALIENRUDE#KEEP#","#DRAW#ROSEHABITAMID#MANE#","#REST#INTOOFTENPLEA#TERM#","OLD##RIOT#BONUS#NONE##RAW","ASK##LOAD#LOYAL#NAME##KEG","##SOD#FADEALLOWREAR#MAD##","ACE##CRAB#TOTAL#WERE##NET","##SPY#GLUEGRASSOATH#DYE##","##NIP#SODASTILLEASE#EYE##","##FOG#GIVETREATWILL#ODD##","##WIN#TORETHROWEARN#ANY##","#SLOW#PATHPARTYURGE#PEER#","##SEE#SOARSALSAUNIT#BED##","##CAN#PAGECOMETUSED#EEL##","##IRE#BRAGALONGSUNK#KEY##","DAM##ITEM#MOTOR#MADE##LED","#POPE#OPENBLENDEARN#TRAY#","ACHE#PLAN#TASTE#STEW#HERE","YAM##EVEN#WIDOW#DATE##LED","##VET#PILELOOSEISLE#PEA##","THE##WEST#OASIS#RARE##YET","##LIE#MANYDANCEARCH#BEE##","##MOM#MOVESEVENPAIN#ALE##","JAW##EXAM#TIGER#SOME##NOD","##LAP#WERERAVENIDEA#GEL##","BUS##ONTO#GIANT#TILE##RYE","##DEN#PALEWAISTACRE#SKY##","#SHOT#CANEBASINALTO#TEEN#","##ASH#KNEETIGERITEM#EEL##","FOR##EVIL#WAGON#LINE##DEW","##GAP#PUREELECTRASH#ANT##","ILL##ROOT#KAYAK#FAME##LEG","#SORE#OPENPLEADEARL#GRAM#","##SPA#CHIPPLANTRAKE#OWE##","##SOD#STAYSTATEEACH#ARK##","#SLAB#HALOPARTYURGE#BEER#","##EVE#FLEAHABITIRON#DEW##","HAS##ARTS#MERIT#AIDE##PEA","##RUB#VISATIGERACID#BED##","AGE##ROLL#CABIN#LOVE##WET","##BEG#GRAYALARMRUIN#TEN##","##SAT#TUBEWHILEHATE#ONE##","DAB##IRON#MINOR#AUTO##SEW","#GRAB#LANELODGEOVAL#WERE#","##DAD#RELYPULSEALTO#TEA##","OPT##FORT#FLOUR#LONE##PAD","ANT##CORD#TRIAL#MEMO##DEW","##OAT#SAMEBASINAVID#YES##","##COW#HAVECOMETOPEN#GEL##","##BAG#CLUEPLANTEAST#APT##","#ARCH#WIRERAVENAREA#TERM#","YAP##EVEN#WIDOW#DATA##LEG","##WOK#TONEEARLYALLY#RED##","##CRY#TRUEGRASSOATH#DYE##","##HAM#FACECABINAMID#MET##","##JAW#SUCHDAIRYONCE#TEE##","GEL##EXIT#MANOR#MENU##NET","#WRAP#HOPECOURTALTO#BEEN#","SPA##ARCH#TOTAL#POLE##ROD","IRK##LIAR#LOYAL#TAKE##KEG","#GRAM#RULESALONOPEN#WERE#","HOP##EVEN#RADIO#LAND##LED","##GEL#AIDETRAITWENT#OAT##","GAG##ACRE#SHELF#EASE##TEE","##CUB#HOPEPILOTIRON#TEN##","THE##EARL#ARROW#MOVE##RED","NET##ODOR#WIDOW#TAPE##YET","##GAP#LACECOURTURGE#BEE##","##LID#HIDERENEWAREA#WON##"],"clues":{"ABIDE":"Put up with","ABLE":"Capable","ACE":"Serve no one can return","ACHE":"Dull, lingering pain","ACID":"Lemon juice has it","ACRE":"Farmland measure","ACT":"Play part","ACTOR":"One in the credits","AGE":"Number on a birthday cake","AGED":"Like fine cheese","AGENT":"Secret ___","AIDE":"Assistant","ALARM":"Morning wake-up sound","ALE":"Pub pour","ALIEN":"Visitor from another planet","ALL":"Every single one","ALLOW":"Permit","ALLY":"Friend in a fight","ALONE":"By yourself","ALONG":"Sing ___ (join in)","ALSO":"In addition","ALTER":"Tailor, as a dress","ALTO":"Voice below soprano","AMID":"In the middle of","ANGEL":"Halo wearer","ANGER":"Fury","ANGLE":"Right ___ (90 degrees)","ANT":"Picnic crasher","ANY":"Whichever","APPLE":"Fruit in a pie","APRON":"Kitchen cover-up","APT":"Fitting","ARC":"Rainbow shape","ARCH":"Curved doorway","AREA":"Length times width","ARGUE":"Bicker","ARIA":"Opera solo","ARK":"Noah's boat","ARM":"Limb","ARMOR":"Knight's suit","ARMY":"Large group of soldiers","ARROW":"Bow's partner","ART":"Museum display","ARTS":"___ and crafts","ASH":"Fireplace leftover","ASIDE":"Stage whisper","ASK":"Pose a question","ATOM":"Tiny building block of matter","AUNT":"Mom's sister","AUTO":"Car","AVID":"Eager","AWARE":"In the know","AXIS":"Earth spins on one","BADGE":"Sheriff's star","BAG":"Grocery carrier","BAR":"Chocolate ___","BARE":"Uncovered","BASIN":"Bathroom sink","BAT":"Cave flier","BAY":"Body of water partly enclosed by land","BED":"Place to sleep","BEE":"Honey maker","BEEN":"Has ___ (washed-up star)","BEER":"Brewery product","BEG":"Plead","BELLY":"Tummy","BET":"Wager","BLAST":"Big explosion","BLEND":"Mix in a blender","BLUE":"Color of a clear sky","BOG":"Swamp","BONUS":"Extra pay","BOY":"Young man","BRAG":"Show off","BRAIN":"Thinking organ","BUD":"Flower before it blooms","BUS":"Yellow school ride","CAB":"Taxi","CABIN":"Log home","CAM":"Web ___","CAMEL":"Desert animal with a hump","CAN":"Soup container","CANE":"Candy ___","CAP":"Baseball hat","CAT":"Purring pet","CHART":"Pie or bar graph","CHIP":"Potato snack","CLAP":"Applaud","CLASH":"Conflict","CLAW":"Crab's pincher","CLUE":"Crossword hint","COG":"Gear tooth","COLON":"Punctuation with two dots","COMET":"Space ball with a tail","CORD":"Phone charger part","COURT":"Tennis surface","COW":"Milk source","CRAB":"Sideways walker on the beach","CRATE":"Wooden shipping box","CREAM":"Coffee add-in","CROW":"Black bird","CRY":"Shed tears","CUB":"Baby bear","CUE":"Pool stick","DAB":"Small amount, as of paint","DAD":"Pop","DAIRY":"Milk and cheese aisle","DAM":"Beaver's build","DAME":"Title for Judi Dench","DANCE":"Waltz or tango","DATA":"Spreadsheet contents","DATE":"Calendar square","DEER":"Doe or buck","DELTA":"River mouth area","DEN":"Fox's home","DEW":"Morning moisture on grass","DIM":"Not bright","DONOR":"Blood giver","DOT":"Period","DRAMA":"Soap opera stuff","DRAW":"Sketch","DRY":"Like a desert","DYE":"Hair color product","EACH":"Apiece","EAGLE":"Bald bird","EAR":"Corn unit","EARL":"British noble","EARLY":"Before the alarm","EARN":"Make, as money","EASE":"Comfort","EAST":"Where the sun rises","EAT":"Have dinner","EATEN":"Gobbled up","EDIT":"Revise, as a draft","EEL":"Slippery sea creature","EGG":"Omelet need","ELBOW":"Arm joint","ELECT":"Vote in","ELSE":"Or ___!","END":"Finish","ENTER":"Keyboard key","ERA":"Long time period","ERROR":"Mistake","ESSAY":"School writing assignment","EVE":"Night before a holiday","EVEN":"Like 2, 4 or 6","EVIL":"Wicked","EWE":"Female sheep","EXAM":"Final, for one","EXIT":"Way out","EYE":"Needle's opening","FACE":"Clock part","FADE":"Grow dim","FAME":"Celebrity status","FARE":"Bus ticket price","FEE":"Charge","FEW":"Not many","FIELD":"Soccer surface","FLEA":"Tiny jumping pest","FLOUR":"Baking powder?","FOG":"Low cloud","FOR":"In favor of","FORT":"Pillow ___","GAG":"Joke","GAP":"Space between teeth","GAS":"Fuel","GAUGE":"Fuel ___","GEL":"Hair product","GEM":"Jewel","GET":"Receive","GIANT":"Huge","GIVE":"Donate","GLOVE":"Mitten's cousin","GLUE":"Craft adhesive","GOAL":"Soccer score","GOD":"Zeus or Thor","GRAB":"Snatch","GRAM":"Tiny weight","GRAPE":"Vineyard fruit","GRASS":"Lawn","GRAVE":"Very serious","GRAY":"Color of storm clouds","GREAT":"Terrific","GRID":"Crossword shape","GUEST":"Hotel visitor","GYM":"Place for a workout","HABIT":"Routine","HALO":"Angel's ring","HAM":"Holiday roast","HARM":"Hurt","HAS":"Owns","HASTE":"Hurry","HATE":"Opposite of love","HAVE":"Own","HAVEN":"Safe place","HEAR":"Listen","HEN":"Egg layer","HER":"Not him","HERE":"Roll call reply","HERO":"Rescuer","HID":"Played hide and seek, say","HIDE":"Conceal","HIRE":"Bring on board","HOP":"Bunny's move","HOPE":"Wish","IDEA":"Light bulb moment","IDLE":"Not working","ILL":"Under the weather","INCH":"Ruler mark","INTO":"Really enjoying","IRE":"Anger","IRK":"Annoy","IRON":"Wrinkle remover","IRONY":"Rain on your wedding day, per a song","ISLE":"Small island","ITEM":"Thing on a list","JAW":"Chewing bone","JET":"Fast plane","JUICE":"Orange drink","KAYAK":"Paddled boat that reads the same backwards","KEEP":"Hold on to","KEG":"Party barrel","KEY":"Door opener","KITE":"Windy day toy","KNEE":"Leg joint","LACE":"Shoe string","LANCE":"Knight's weapon","LAND":"Touch down","LANE":"Bowling ___","LAP":"One trip around the track","LARGE":"Big","LED":"Was in front","LEG":"Part of a relay race","LET":"Allow","LEVEL":"Video game stage","LIAR":"Fibber","LID":"Jar top","LIE":"Fib","LINE":"Queue","LINEN":"Sheet fabric","LION":"King of the jungle","LIP":"Smile part","LIVE":"Not taped","LOAD":"Laundry batch","LOAF":"Bakery unit","LODGE":"Ski cabin","LONE":"Single","LOOSE":"Not tight","LORE":"Legends","LOVE":"Zero, in tennis","LOW":"Not high","LOYAL":"Faithful","MAD":"Angry","MADE":"Created","MANE":"Lion's hair","MANOR":"Mansion","MANY":"Lots","MARE":"Female horse","MEAL":"Dinner, for one","MEDAL":"Olympic prize","MEMO":"Office note","MEN":"Guys","MENU":"Restaurant list","MERIT":"Worth","MET":"Ran into","METAL":"Iron or tin","MINOR":"Small","MODE":"Airplane ___","MOM":"Mother","MOTOR":"Engine","MOVE":"Relocate","MOVIE":"Film","NAME":"What's on a name tag","NET":"Tennis divider","NEW":"Brand-___","NINE":"Number of innings","NIP":"Little bite","NOD":"Yes gesture","NOISE":"Racket","NONE":"Zero","NORM":"Standard","NOTE":"Sticky ___","NOW":"Right away","OASIS":"Desert watering hole","OAT":"Oatmeal grain","OATH":"Promise in court","ODD":"Strange","ODOR":"Smell","OFF":"Not on","OFTEN":"Frequently","OLD":"Not new","ONCE":"___ upon a time","ONE":"Single","ONION":"Tear-jerking vegetable","ONLY":"Sole","ONTO":"Wise to","OPEN":"Not closed","OPERA":"Show with arias","OPT":"Choose, with \"for\"","ORB":"Sphere","OTTER":"River mammal that floats on its back","OVAL":"Egg shape","OVEN":"Baker's appliance","OWE":"Be in debt","PACK":"Wolf group","PAD":"Note ___","PAGE":"Book leaf","PAIN":"Ache","PAL":"Buddy","PALE":"Ghostly white","PAPER":"It beats rock","PARTY":"Celebration","PAT":"Gentle tap","PATH":"Trail","PAY":"Salary","PEA":"Pod veggie","PEDAL":"Bike part","PEER":"Look closely","PEG":"Coat hook","PEN":"Writing tool","PENNY":"One cent","PET":"Dog or cat","PILE":"Heap","PILOT":"Plane flier","PINE":"Christmas tree","PIT":"Peach stone","PLAN":"Blueprint","PLANT":"Houseplant, for one","PLEA":"Urgent request","PLEAD":"Beg","POLAR":"___ bear","POLE":"North or South end","POLL":"Survey","POPE":"Leader in Vatican City","POSE":"Strike a ___","PRO":"Expert","PROP":"Stage object","PUB":"Tavern","PULSE":"Heartbeat","PUP":"Young dog","PURE":"Unmixed","PUSH":"Opposite of pull","RADAR":"Blip detector","RADIO":"FM device","RAGE":"Fury","RAKE":"Leaf gatherer","RANK":"Position","RAPID":"Very fast","RARE":"Steak order with a red center","RASH":"Itchy skin spot","RAT":"Sewer rodent","RAVEN":"Black bird of poetry","RAW":"Uncooked","REALM":"Kingdom","REAP":"Harvest","REAR":"Back","RED":"Stoplight color","RELY":"Depend","RENEW":"Extend, as a subscription","RENT":"Monthly payment","REST":"Take a break","RIFLE":"Long gun","RIG":"Big truck","RIGID":"Stiff","RIOT":"Very funny person","RIVER":"Mississippi, for one","ROBIN":"Red-breasted bird","ROD":"Fishing pole","ROLL":"Dinner bread","ROOT":"Cheer","ROPE":"Tug-of-war need","ROSE":"Thorny flower","ROUTE":"Path","ROW":"Line of seats","RUB":"Massage","RUDE":"Impolite","RUIN":"Wreck","RULE":"Law","RULER":"Monarch","RUSH":"Hurry","RUT":"Groove","RYE":"Bread for a Reuben","SALAD":"Caesar, for one","SALON":"Haircut place","SALSA":"Chip dip","SAME":"Identical","SANE":"Rational","SAT":"Took a seat","SAVE":"Rescue","SCALE":"Bathroom weigher","SEA":"Ocean","SEE":"Look at","SEEM":"Appear","SET":"Ready, ___, go!","SEVEN":"Days in a week","SEW":"Stitch","SHAKE":"Milk drink","SHARE":"Split","SHELF":"Bookcase part","SHOT":"Attempt","SHRUB":"Bush","SIDE":"Fries, say","SKY":"Where clouds are","SLAB":"Thick slice","SLATE":"Clean ___ (fresh start)","SLEEP":"Rest at night","SLOW":"Not fast","SMART":"Clever","SOAR":"Fly high","SOD":"Turf","SODA":"Fizzy drink","SOLAR":"Sun-powered","SOLID":"Not liquid or gas","SOME":"A few","SOON":"Before long","SORE":"Achy","SOW":"Plant, as seeds","SPA":"Place for a day of pampering","SPARE":"Extra","SPY":"Secret agent","STACK":"Pile","STAIR":"Step","STAR":"Hollywood celeb","STARE":"Gaze","STATE":"Texas or Ohio","STAY":"Remain","STEAM":"Kettle cloud","STEW":"Slow-cooked dish","STILL":"Motionless","STRIP":"Comic ___","SUB":"Long sandwich","SUCH":"So","SUITE":"Hotel room with extras","SUNK":"Sank","TAB":"Bar bill","TAKE":"Grab","TALE":"Story","TAME":"Not wild","TAPE":"Duct ___","TASTE":"Sample a bite","TEA":"Chamomile, for one","TEE":"Golf peg","TEEN":"Thirteen-year-old","TEN":"Perfect score","TERM":"School semester","THAN":"Compared to","THE":"Most common word","THROW":"Toss","TIE":"Draw in a game","TIGER":"Striped big cat","TILE":"Bathroom floor square","TIRE":"Flat one ruins a drive","TODAY":"This very day","TON":"Big weight","TONE":"Voice quality","TORE":"Ripped","TOTAL":"Sum","TRAIT":"Characteristic","TRAY":"Cafeteria carrier","TREAT":"Halloween handout","TRIAL":"Courtroom event","TRIED":"Gave it a go","TROOP":"Scout group","TRUE":"Not false","TRUST":"Faith","TUBE":"Toothpaste holder","TUNA":"Sandwich fish","TWO":"Pair","UNIT":"Inch or ounce","UPON":"Once ___ a time","UPPER":"Top, as a bunk","URGE":"Strong desire","USED":"Secondhand","VALUE":"Worth","VAST":"Huge","VEIN":"Blood vessel","VET":"Doctor for a dog","VICE":"Bad habit","VIOLA":"Instrument bigger than a violin","VISA":"Travel document","WADE":"Walk in shallow water","WAG":"Dog tail motion","WAGON":"Covered ___","WAIST":"Belt spot","WAS":"Used to be","WED":"Married","WENT":"Left","WERE":"You ___ saying?","WEST":"Where the sun sets","WET":"Soaked","WHILE":"During","WHO":"Question word for a person","WHOLE":"Entire","WHY":"Toddler question","WIDOW":"Black ___ spider","WILL":"Testament","WIN":"Victory","WIRE":"Electric cable","WOK":"Stir-fry pan","WON":"Came in first","WORLD":"Globe","WORRY":"Fret","WRAP":"Gift ___","YAM":"Sweet potato","YAP":"Small dog's bark","YES":"Opposite of no","YET":"So far","YEW":"Evergreen tree","YIELD":"Triangular traffic sign"}};
+function miniEntries(g){
+  const n=5, open=(r,c)=>r>=0&&r<n&&c>=0&&c<n&&g[r*n+c]!=='#', num=Array(25).fill(0), A=[], D=[]; let k=0;
+  for (let r=0;r<n;r++) for (let c=0;c<n;c++){
+    if (!open(r,c)) continue;
+    const sa=!open(r,c-1)&&open(r,c+1), sd=!open(r-1,c)&&open(r+1,c);
+    if (sa||sd) num[r*n+c]=++k;
+    if (sa){ const cells=[]; for (let x=c;open(r,x);x++) cells.push(r*n+x); A.push({num:k,dir:'A',cells}); }
+    if (sd){ const cells=[]; for (let y=r;open(y,c);y++) cells.push(y*n+c); D.push({num:k,dir:'D',cells}); }
+  }
+  return {num,A,D};
+}
+function genMini(idx){
+  const sol = MINI.grids[idx % MINI.grids.length], e = miniEntries(sol);
+  [...e.A,...e.D].forEach(en=>{ en.clue = MINI.clues[en.cells.map(i=>sol[i]).join('')] || '?'; });
+  return {sol,...e};
+}
+
+/* puzzle ids: 'd2026-11-16' (daily) or 'L12' (level) */
+const isDaily = pid => pid[0]==='d';
+const levelOf = pid => +pid.slice(1);
+function difficulty(pid){ return isDaily(pid) ? 0.45 : (levelOf(pid)-1)/(LEVELS-1); }
+const TIER = ['Warm-up','Easy','Medium','Hard','Expert'];
+const tierOf = n => TIER[Math.min(4,Math.floor((n-1)/15))];
+const cache = {};
+function getPuzzle(id,pid){
+  const k=id+pid; if (cache[k]) return cache[k];
+  const r = rng('pp|'+id+'|'+pid), t = difficulty(pid), L = isDaily(pid) ? null : levelOf(pid);
+  const dn = isDaily(pid) ? dayNum(pid.slice(1)) : 0;
+  let p;
+  if (id==='bloom') p = genBloom(r, L ? (L<=10?6:L<=35?7:L<=60?8:9) : [7,8,7,8,8,7,9][((dn%7)+7)%7]);
+  else if (id==='even') p = genEven(r,t);
+  else if (id==='trail') p = genTrail(r, L ? (L<=15?5:L<=55?6:7) : 6, t);
+  else if (id==='six') p = genSix(r,t);
+  else if (id==='plots') p = genPlots(r, L ? (L<=15?5:L<=40?6:L<=60?7:8) : 6, t);
+  else if (id==='weave'){ const order=shuffle(range(THEMES.length),rng('weave-order')); const idx = L ? order[L-1] : order[((dn*37)%THEMES.length+THEMES.length)%THEMES.length]; p = genWeave(r,THEMES[idx],t); }
+  else { const order=shuffle(range(MINI.grids.length),rng('mini-order')); p = genMini(L ? order[L-1] : order[((dn*29)%MINI.grids.length+MINI.grids.length)%MINI.grids.length]); }
+  return cache[k]=p;
+}
+
+/* ================= icons ================= */
+const FLOWER = '<svg viewBox="0 0 40 40" aria-hidden="true"><g fill="var(--c)">'+[0,72,144,216,288].map(a=>`<ellipse cx="20" cy="10.5" rx="6" ry="9" transform="rotate(${a} 20 20)"/>`).join('')+'</g><circle cx="20" cy="20" r="5" fill="var(--surface)"/><circle cx="20" cy="20" r="3" fill="var(--c)"/></svg>';
+const ICONS = {
+  bloom: FLOWER,
+  even: '<svg viewBox="0 0 40 40"><circle cx="11" cy="11" r="7" fill="var(--sym-a)"/><rect x="23" y="5" width="11" height="11" rx="2" transform="rotate(45 28.5 10.5)" fill="var(--sym-b)"/><rect x="5" y="24" width="11" height="11" rx="2" transform="rotate(45 10.5 29.5)" fill="var(--sym-b)"/><circle cx="29" cy="29" r="7" fill="var(--sym-a)"/></svg>',
+  trail: '<svg viewBox="0 0 40 40" fill="none"><path d="M8 8 H32 V20 H8 V32 H32" stroke="var(--c)" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/><circle cx="8" cy="8" r="5" fill="var(--ink)"/><circle cx="32" cy="32" r="5" fill="var(--ink)"/></svg>',
+  six: '<svg viewBox="0 0 40 40"><rect x="3" y="3" width="34" height="34" rx="4" fill="none" stroke="var(--c)" stroke-width="2.5"/><path d="M20 3V37M3 14.3H37M3 25.6H37" stroke="var(--c)" stroke-width="2"/><text x="11.5" y="12.5" font-size="9" text-anchor="middle" font-weight="800" fill="var(--ink)" font-family="sans-serif">6</text><text x="28.5" y="35" font-size="9" text-anchor="middle" font-weight="800" fill="var(--ink)" font-family="sans-serif">1</text></svg>',
+  plots: '<svg viewBox="0 0 40 40"><rect x="3" y="3" width="21" height="13" rx="3" fill="var(--r4)" stroke="var(--c)" stroke-width="2.5"/><rect x="27" y="3" width="10" height="34" rx="3" fill="var(--r1)" stroke="var(--c)" stroke-width="2.5"/><rect x="3" y="19" width="21" height="18" rx="3" fill="var(--r2)" stroke="var(--c)" stroke-width="2.5"/><text x="13.5" y="13" font-size="9" text-anchor="middle" font-weight="800" fill="var(--ink)" font-family="sans-serif">4</text><text x="13.5" y="32" font-size="9" text-anchor="middle" font-weight="800" fill="var(--ink)" font-family="sans-serif">6</text></svg>',
+  weave: '<svg viewBox="0 0 40 40" fill="none"><path d="M9 9 H20 V20 H31 V31" stroke="var(--c)" stroke-width="7" stroke-linecap="round" stroke-linejoin="round" opacity=".35"/><g font-family="sans-serif" font-weight="800" font-size="9" text-anchor="middle" fill="var(--ink)"><text x="9" y="12">W</text><text x="20" y="12">E</text><text x="20" y="23">A</text><text x="31" y="23">V</text><text x="31" y="34">E</text></g></svg>',
+  mini: '<svg viewBox="0 0 40 40"><rect x="3" y="3" width="34" height="34" rx="3" fill="var(--surface)" stroke="var(--ink)" stroke-width="2.5"/><path d="M14.3 3V37M25.6 3V37M3 14.3H37M3 25.6H37" stroke="var(--ink)" stroke-width="1.5"/><rect x="3" y="3" width="11.3" height="11.3" fill="var(--ink)"/><rect x="25.6" y="25.6" width="11.4" height="11.4" fill="var(--ink)"/><rect x="14.3" y="14.3" width="22.7" height="11.3" fill="var(--c)" opacity=".45"/></svg>'
+};
+
+/* ================= games ================= */
+const GAMES = [
+ {id:'bloom', name:'Bloom', color:'--bloom', blurb:'One flower per row, column and bed.',
+  rules:['Place one flower in every row, every column and every colored garden bed.','No two flowers may touch, not even at the corners.','Tap a square once for ×, twice for a flower, three times to clear it. Drag across squares to mark several with ×.','Turn on Auto × to cross out every square a flower rules out.'],
+  make: makeBloom},
+ {id:'even', name:'Even', color:'--even', blurb:'Balance circles and diamonds.',
+  rules:['Fill every square with a circle or a diamond.','Each row and column holds the same number of each.','No more than two of the same shape may sit next to each other in a row or column.','Squares joined by = hold the same shape. Squares joined by × hold different shapes.','Tap to cycle: circle, diamond, empty.'],
+  make: makeEven},
+ {id:'trail', name:'Trail', color:'--trail', blurb:'One path through every square.',
+  rules:['Start on 1 and drag to draw a single path that passes through every square exactly once.','Visit the numbered stops in order and finish on the highest number.','The path cannot cross the thick walls.','Drag back along your path, or tap any square on it, to undo moves.'],
+  make: makeTrail},
+ {id:'six', name:'Six', color:'--six', blurb:'Sudoku on a 6×6 grid.',
+  rules:['Fill the grid so each row, column and outlined 2×3 box contains 1 to 6 exactly once.','Tap a square, then tap a number. Repeats turn red.','Turn on Notes to pencil in candidates.'],
+  make: makeSix},
+ {id:'plots', name:'Plots', color:'--plots', blurb:'Split the field into numbered rectangles.',
+  rules:['Divide the whole grid into rectangles.','Each rectangle holds exactly one number, and that number is how many squares it covers.','Drag from one corner to the opposite corner to draw a rectangle. Tap a rectangle to remove it.','Dashed red outlines are rectangles that break a rule.'],
+  make: makePlots},
+ {id:'weave', name:'Weave', color:'--weave', blurb:'Trace the hidden words on a theme.',
+  rules:['Every letter belongs to exactly one hidden word, and all of them fit the theme.','Drag through neighboring letters (up, down, left or right) to spell a word.','Hint outlines one word you have not found yet.'],
+  make: makeWeave},
+ {id:'mini', name:'Mini', color:'--mini', blurb:'A five-by-five crossword.',
+  rules:['Tap a square to select it; tap it again to switch between Across and Down.','Type with the on-screen keys, or a keyboard on desktop.','Check marks wrong letters in red. Reveal fills in the current word.'],
+  make: makeMini},
+];
+
+/* ================= state ================= */
+const stKey = (id,pid) => isDaily(pid) ? 'pp:'+pid.slice(1)+':'+id : 'pp:'+pid+':'+id;
+const loadState = (id,pid) => store.get(stKey(id,pid)) || {time:0,done:false};
+const settings = Object.assign({autoX:true}, store.get('pp:settings')||{});
+const saveSettings = () => store.set('pp:settings',settings);
+function streak(id){
+  let d = new Date(), n = 0;
+  if (!(loadState(id,'d'+keyOf(d)).done)) d.setDate(d.getDate()-1);
+  while (loadState(id,'d'+keyOf(d)).done){ n++; d.setDate(d.getDate()-1); }
+  return n;
+}
+function levelStats(id){
+  let done=0, wip=0, total=0, best=Infinity, next=0;
+  for (let L=1;L<=LEVELS;L++){ const s=loadState(id,'L'+L); if (s.done){ done++; total+=s.time; best=Math.min(best,s.time); } else { if (s.time>0) wip++; if (!next) next=L; } }
+  return {done,wip,avg:done?Math.round(total/done):0,best:done?best:0,next};
+}
+
+/* ================= hub ================= */
+function renderHub(){
+  const day = todayKey(), n = dayNum(day), pid='d'+day;
+  const date = new Date().toLocaleDateString(undefined,{weekday:'long',month:'long',day:'numeric'});
+  const states = GAMES.map(g=>loadState(g.id,pid));
+  const solved = states.filter(s=>s.done).length;
+  app.innerHTML = `
+  <header class="hub-top"><div><h1>Pocket Puzzles</h1><div class="hub-date">${esc(date)}</div></div>
+    <div class="issue">No.<b>${n}</b></div></header>
+  <div class="meter">${GAMES.map((g,i)=>`<i style="--c:var(${g.color})" class="${states[i].done?'on':''}"></i>`).join('')}</div>
+  <div class="meter-label">${solved} of ${GAMES.length} daily puzzles solved</div>
+  <nav class="tiles">${GAMES.map((g,i)=>{ const s=states[i], ls=levelStats(g.id), k=streak(g.id);
+    const today = s.done ? `<span class="pill">Today ${fmt(s.time)}</span>` : `<span class="pill ghost">${s.time>0?'Resume today':'Play today'}</span>`;
+    return `<a class="tile" href="#${g.id}" style="--c:var(${g.color})"><span class="ico">${ICONS[g.id]}</span><span><h2>${g.name}</h2><p>${g.blurb}</p></span><span class="st">${today}<small>${ls.done}/${LEVELS} levels${k>1?` · ${k}-day streak`:''}</small></span></a>`; }).join('')}</nav>
+  <footer class="foot">
+    <div>New daily puzzles at midnight. Levels are always open.</div>
+    <div class="row">${solved?'<button class="btn small" id="share">Copy today\'s results</button>':''}<button class="btn small" id="fb">Send feedback</button></div>
+    <button class="linkbtn" id="data">Back up or restore progress</button>
+    <div style="font-size:.75rem">Version ${APP_VERSION}</div>
+  </footer>`;
+  const sh = document.getElementById('share');
+  if (sh) sh.onclick = () => copyText(summary());
+  document.getElementById('fb').onclick = () => feedbackSheet();
+  document.getElementById('data').onclick = () => dataSheet();
+}
+function summary(){
+  const pid='d'+todayKey();
+  return `Pocket Puzzles No. ${dayNum(todayKey())}\n`+GAMES.map(g=>{ const s=loadState(g.id,pid); return `${g.name} ${s.done?'✓ '+fmt(s.time):'–'}`; }).join('\n');
+}
+function copyText(t){
+  try { navigator.clipboard.writeText(t).then(()=>toast('Copied'),()=>toast('Copy failed')); }
+  catch(e){ toast('Copy failed'); }
+}
+
+/* ================= game page (today + levels) ================= */
+function renderGamePage(g){
+  const pid='d'+todayKey(), s=loadState(g.id,pid), ls=levelStats(g.id);
+  let grid='';
+  for (let L=1;L<=LEVELS;L++){
+    if ((L-1)%15===0) grid+=`<div class="tier">${tierOf(L)}</div>`;
+    const st=loadState(g.id,'L'+L);
+    grid+=`<a href="#${g.id}-${L}" class="${st.done?'done':st.time>0?'wip':''}${L===ls.next?' next':''}" aria-label="Level ${L}${st.done?', solved in '+fmt(st.time):''}">${L}</a>`;
+  }
+  app.innerHTML = `<section style="--c:var(${g.color})">
+    <header class="bar" style="grid-template-columns:1fr"><a class="back" href="#">‹ All games</a></header>
+    <div class="gp-head"><span class="ico">${ICONS[g.id]}</span><div><h1>${g.name}</h1><p>${g.blurb}</p></div></div>
+    <a class="today" href="#${g.id}-today"><span><b>Today's puzzle</b><small>No. ${dayNum(todayKey())}${streak(g.id)>1?` · ${streak(g.id)}-day streak`:''}</small></span>
+      ${s.done?`<span class="pill">Solved ${fmt(s.time)}</span>`:`<span class="pill ghost">${s.time>0?'Resume':'Play'}</span>`}</a>
+    <div class="stats"><div><b>${ls.done}</b><small>levels solved</small></div><div><b>${ls.best?fmt(ls.best):'–'}</b><small>best time</small></div><div><b>${ls.avg?fmt(ls.avg):'–'}</b><small>average</small></div></div>
+    <div class="lv-head"><h2>Levels</h2>${ls.next?`<a class="btn small solid" href="#${g.id}-${ls.next}">Play level ${ls.next}</a>`:'<span>All 75 solved</span>'}</div>
+    <nav class="levels">${grid}</nav>
+    <details class="howto"><summary>How to play</summary><ul>${g.rules.map(x=>`<li>${x}</li>`).join('')}</ul></details>
+  </section>`;
+}
+
+/* ================= puzzle shell ================= */
+let cur = null, ticker = null;
+function stopTimer(){ if (ticker){ clearInterval(ticker); ticker=null; } }
+function openPuzzle(g,pid){
+  const puz = getPuzzle(g.id,pid), st = loadState(g.id,pid);
+  if (!puz) throw new Error('No puzzle for '+g.id+' '+pid);
+  const label = isDaily(pid) ? `Today · No. ${dayNum(pid.slice(1))}` : `Level ${levelOf(pid)} · ${tierOf(levelOf(pid))}`;
+  app.innerHTML = `<section class="game ${st.done?'solved':''}" style="--c:var(${g.color})">
+    <header class="bar"><a class="back" href="#${g.id}">‹ ${g.name}</a><h1>${g.name}</h1><span class="clock" id="clock">${fmt(st.time)}</span></header>
+    <div class="sub">${label}</div>
+    <div id="stage"></div>
+    <details class="howto"${st.time===0&&!st.done&&!store.get('pp:seen:'+g.id)?' open':''}><summary>How to play</summary><ul>${g.rules.map(x=>`<li>${x}</li>`).join('')}</ul></details>
+    <button class="linkbtn report" id="report">Report a problem with this puzzle</button>
+  </section>`;
+  store.set('pp:seen:'+g.id,1);
+  const clock = document.getElementById('clock');
+  const api = {
+    st, puz, pid,
+    save(){ store.set(stKey(g.id,pid), st); },
+    win(){
+      if (st.done) return; st.done = true; st.solvedAt = new Date().toISOString(); api.save(); stopTimer();
+      app.querySelector('.game').classList.add('solved');
+      send({type:'result',game:g.id,puzzle:pid,time:st.time,hints:st.hints||0});
+      setTimeout(()=>showWin(g,pid,st),350);
+    }
+  };
+  cur = {g, pid, api, onKey:null};
+  g.make(document.getElementById('stage'), puz, st, api);
+  document.getElementById('report').onclick = () => feedbackSheet(`${g.name}, ${label}: `);
+  if (!st.done){
+    ticker = setInterval(()=>{ if (document.hidden||st.done) return; st.time++; clock.textContent=fmt(st.time); if (st.time%5===0) api.save(); },1000);
+  }
+}
+function openSheet(html,color){
+  closeSheets();
+  const scrim=document.createElement('div'); scrim.className='scrim';
+  const el=document.createElement('div'); el.className='sheet'; if (color) el.style.setProperty('--c',`var(${color})`);
+  el.innerHTML=`<button class="x" aria-label="Close">×</button><div class="in">${html}</div>`;
+  document.body.append(scrim,el);
+  const close=()=>{ el.remove(); scrim.remove(); };
+  el.querySelector('.x').onclick=close; scrim.onclick=close;
+  el.querySelectorAll('a').forEach(a=>a.addEventListener('click',close));
+  return {el,close};
+}
+const closeSheets=()=>document.querySelectorAll('.sheet,.scrim').forEach(s=>s.remove());
+function showWin(g,pid,st){
+  let primary='';
+  if (isDaily(pid)){ const next=GAMES.find(x=>x.id!==g.id&&!loadState(x.id,'d'+todayKey()).done); primary = next?`<a class="btn solid" href="#${next.id}-today">Next: ${next.name}</a>`:`<a class="btn solid" href="#${g.id}">Play levels</a>`; }
+  else { const L=levelOf(pid); primary = L<LEVELS?`<a class="btn solid" href="#${g.id}-${L+1}">Level ${L+1}</a>`:''; }
+  const label = isDaily(pid)?`${g.name} No. ${dayNum(pid.slice(1))}`:`${g.name} level ${levelOf(pid)}`;
+  const {el}=openSheet(`<h2>Solved</h2><div class="t">${label} in ${fmt(st.time)}${st.hints?` · ${st.hints} hint${st.hints>1?'s':''}`:''}</div>
+   <div class="row">${primary}<button class="btn" data-copy>Copy result</button><a class="btn" href="#${g.id}">${g.name} levels</a></div>`, g.color);
+  el.querySelector('[data-copy]').onclick = ()=>copyText(`Pocket Puzzles · ${label} · ${fmt(st.time)}`);
+}
+function feedbackSheet(prefix=''){
+  const log=store.get(LOG)||[];
+  const {el,close}=openSheet(`<h2>Send feedback</h2>
+    <label for="fbtext" class="note">Bug, idea or puzzle that felt wrong? Write it here. The current page and your device type are attached automatically.</label>
+    <textarea id="fbtext" maxlength="4000">${esc(prefix)}</textarea>
+    ${log.length?`<label class="note" style="display:flex;gap:8px;align-items:center"><input type="checkbox" id="fblog" checked> Include the ${log.length} recent error${log.length>1?'s':''} logged on this device</label>`:''}
+    <div class="row"><button class="btn solid" id="fbsend" style="--c:var(--six)">Send</button></div>
+    <div class="note">${CONFIG.endpoint?'':'Sending is not connected yet, so feedback is saved on this device and goes out automatically once it is.'}</div>`);
+  const ta=el.querySelector('#fbtext'); ta.focus(); ta.setSelectionRange(ta.value.length,ta.value.length);
+  el.querySelector('#fbsend').onclick=()=>{ const text=ta.value.trim(); if (!text){ toast('Write something first'); return; }
+    const cb=el.querySelector('#fblog');
+    send({type:'feedback',text,game:cur&&cur.g.id,puzzle:cur&&cur.pid,state:cur?JSON.stringify(cur.api.st).slice(0,3000):'',errors:cb&&cb.checked?JSON.stringify(log).slice(0,6000):''});
+    close(); toast(CONFIG.endpoint?'Thanks, feedback sent':'Thanks, saved. It sends once connected'); };
+}
+function dataSheet(){
+  const dump=()=>{ const o={}; store.keys().filter(k=>k.startsWith('pp:')&&k!==OUTBOX&&k!==LOG).forEach(k=>o[k]=store.get(k)); return JSON.stringify(o); };
+  const {el,close}=openSheet(`<h2>Your progress</h2>
+    <div class="note">Results save automatically in this browser as you play. To move them to another phone or browser, copy a backup here and paste it into Restore there.</div>
+    <div class="row"><button class="btn solid" id="bk" style="--c:var(--ink)">Copy backup</button></div>
+    <textarea id="rs" placeholder="Paste a backup here to restore it"></textarea>
+    <div class="row"><button class="btn" id="rsb">Restore</button></div>`);
+  el.querySelector('#bk').onclick=()=>copyText(dump());
+  el.querySelector('#rsb').onclick=()=>{ try { const o=JSON.parse(el.querySelector('#rs').value); let n=0; Object.entries(o).forEach(([k,v])=>{ if (k.startsWith('pp:')){ store.set(k,v); n++; } }); close(); toast(`Restored ${n} saved items`); route(); } catch(e){ toast('That does not look like a backup'); } };
+}
+function confirmButton(btn,label,fn){
+  let armed=false,t;
+  btn.onclick=safe(()=>{ if (armed){ clearTimeout(t); armed=false; btn.textContent=label; fn(); } else { armed=true; btn.textContent='Tap again'; t=setTimeout(()=>{armed=false;btn.textContent=label;},2500); } });
+}
+function on(el,ev,fn){ el.addEventListener(ev,safe(fn)); }
+
+/* ---------- Bloom ---------- */
+function makeBloom(el,p,st,api){
+  const n=p.n, reg=p.reg;
+  if (!st.marks||st.marks.length!==n*n) st.marks=Array(n*n).fill(0);
+  const hist=[];
+  el.innerHTML=`<div class="board bloom" style="--n:${n}"></div>
+   <div class="tools"><button class="btn${settings.autoX?' on':''}" id="ax">Auto ×</button><button class="btn" id="undo">Undo</button><button class="btn" id="clr">Clear</button></div>
+   <p class="hint">${n} flowers, ${n} beds. Tap for ×, tap again for a flower.</p>`;
+  const board=el.querySelector('.board');
+  const thick='2.5px solid var(--edge)', thin='1px solid color-mix(in srgb,var(--edge) 22%,transparent)';
+  const cells=range(n*n).map(i=>{ const d=document.createElement('div'); d.className='cell'; const R=Math.floor(i/n),C=i%n;
+    d.style.background=`var(--r${p.color[reg[i]]})`;
+    if (C<n-1) d.style.borderRight = reg[i]!==reg[i+1]?thick:thin;
+    if (R<n-1) d.style.borderBottom = reg[i]!==reg[i+n]?thick:thin;
+    board.appendChild(d); return d; });
+  const hits=(i,j)=>{ const ri=Math.floor(i/n),ci=i%n,rj=Math.floor(j/n),cj=j%n; return ri===rj||ci===cj||reg[i]===reg[j]||(Math.abs(ri-rj)<=1&&Math.abs(ci-cj)<=1); };
+  function render(pop){
+    const fl=range(n*n).filter(i=>st.marks[i]===2), bad=new Set();
+    for (let a=0;a<fl.length;a++) for (let b=a+1;b<fl.length;b++) if (hits(fl[a],fl[b])){ bad.add(fl[a]); bad.add(fl[b]); }
+    cells.forEach((d,i)=>{ const m=st.marks[i];
+      const auto = settings.autoX && m===0 && fl.some(f=>f!==i&&hits(f,i));
+      d.innerHTML = m===1?'<span class="x">×</span>':m===2?FLOWER:auto?'<span class="x auto">×</span>':'';
+      d.classList.toggle('bad',bad.has(i));
+      if (pop===i&&m===2) d.firstChild.classList.add('pop'); });
+    if (fl.length===n&&bad.size===0) api.win();
+  }
+  let drag=null;
+  on(board,'pointerdown',e=>{ if (st.done) return; const i=cellFromPoint(board,n,n,e); if (i<0) return; board.setPointerCapture(e.pointerId); drag={i,moved:false}; e.preventDefault(); });
+  on(board,'pointermove',e=>{ if (!drag) return; const i=cellFromPoint(board,n,n,e); if (i<0||(i===drag.i&&!drag.moved)) return;
+    if (!drag.moved){ drag.moved=true; hist.push(st.marks.slice()); if (st.marks[drag.i]===0) st.marks[drag.i]=1; }
+    if (st.marks[i]===0){ st.marks[i]=1; render(); } });
+  on(board,'pointerup',()=>{ if (!drag) return; const d=drag; drag=null;
+    if (!d.moved){ hist.push(st.marks.slice()); st.marks[d.i]=(st.marks[d.i]+1)%3; render(d.i); } else render();
+    api.save(); });
+  board.addEventListener('pointercancel',()=>{ drag=null; });
+  const ax=el.querySelector('#ax');
+  on(ax,'click',()=>{ settings.autoX=!settings.autoX; saveSettings(); ax.classList.toggle('on',settings.autoX); render(); });
+  on(el.querySelector('#undo'),'click',()=>{ if (st.done||!hist.length) return; st.marks=hist.pop(); render(); api.save(); });
+  confirmButton(el.querySelector('#clr'),'Clear',()=>{ if (st.done) return; hist.push(st.marks.slice()); st.marks.fill(0); render(); api.save(); });
+  render();
+}
+
+/* ---------- Even ---------- */
+function makeEven(el,p,st,api){
+  const N=6;
+  if (!st.cells) st.cells=p.giv.slice();
+  const hist=[];
+  el.innerHTML=`<div class="board even" style="--n:${N}"></div>
+   <div class="legend"><span><i class="sym a"></i>circle</span><span><i class="sym b"></i>diamond</span><span><b>=</b> same</span><span><b>×</b> different</span></div>
+   <div class="tools"><button class="btn" id="undo">Undo</button><button class="btn" id="clr">Clear</button></div>`;
+  const board=el.querySelector('.board');
+  const cells=range(36).map(i=>{ const d=document.createElement('div'); d.className='cell'+(p.giv[i]>=0?' given':''); if (i%N===N-1) d.style.borderRight='0'; if (i>=30) d.style.borderBottom='0'; board.appendChild(d); return d; });
+  const edgeEls=p.edges.map(e=>{ const b=document.createElement('div'); b.className='edge'; b.textContent=e.t==='='?'=':'×';
+    const R=Math.floor(e.a/N),C=e.a%N, h=e.b===e.a+1;
+    b.style.left=((h?C+1:C+.5)/N*100)+'%'; b.style.top=((h?R+.5:R+1)/N*100)+'%'; board.appendChild(b); return b; });
+  function render(){
+    const g=st.cells, bad=new Set();
+    for (let line=0;line<N;line++) for (const dir of [0,1]){
+      const ids=range(N).map(k=>dir?k*N+line:line*N+k);
+      for (const v of [0,1]){ if (ids.filter(i=>g[i]===v).length>N/2) ids.forEach(i=>{ if (g[i]===v) bad.add(i); }); }
+      for (let s=0;s<=N-3;s++){ const a=g[ids[s]]; if (a>=0&&a===g[ids[s+1]]&&a===g[ids[s+2]]){ bad.add(ids[s]); bad.add(ids[s+1]); bad.add(ids[s+2]); } }
+    }
+    p.edges.forEach((e,k)=>{ const x=g[e.a],y=g[e.b]; const wrong=x>=0&&y>=0&&(e.t==='='?x!==y:x===y); edgeEls[k].classList.toggle('bad',wrong); if (wrong){ bad.add(e.a); bad.add(e.b); } });
+    cells.forEach((d,i)=>{ d.innerHTML=g[i]===0?'<i class="sym a"></i>':g[i]===1?'<i class="sym b"></i>':''; d.classList.toggle('bad',bad.has(i)); });
+    if (g.every(v=>v>=0)&&bad.size===0) api.win();
+  }
+  on(board,'pointerdown',e=>{ if (st.done) return; const i=cellFromPoint(board,N,N,e); if (i<0||p.giv[i]>=0) return; e.preventDefault();
+    hist.push(st.cells.slice()); st.cells[i]=st.cells[i]===-1?0:st.cells[i]===0?1:-1; render(); api.save(); });
+  on(el.querySelector('#undo'),'click',()=>{ if (st.done||!hist.length) return; st.cells=hist.pop(); render(); api.save(); });
+  confirmButton(el.querySelector('#clr'),'Clear',()=>{ if (st.done) return; hist.push(st.cells.slice()); st.cells=p.giv.slice(); render(); api.save(); });
+  render();
+}
+
+/* ---------- Trail ---------- */
+function makeTrail(el,p,st,api){
+  const n=p.n, walls=new Set(p.walls);
+  if (!Array.isArray(st.path)) st.path=[];
+  el.innerHTML=`<div class="board trail" style="--n:${n}"></div>
+   <div class="tools"><button class="btn" id="undo">Undo</button><button class="btn" id="clr">Clear</button></div>
+   <p class="hint">Start on 1. Fill every square and finish on ${p.last}.</p>`;
+  const board=el.querySelector('.board');
+  const cells=range(n*n).map(i=>{ const d=document.createElement('div'); d.className='cell'; if (i%n===n-1) d.style.borderRight='0'; if (i>=n*n-n) d.style.borderBottom='0';
+    if (p.nums[i]) d.innerHTML=`<span class="badge">${p.nums[i]}</span>`; board.appendChild(d); return d; });
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg'); svg.setAttribute('class','path'); svg.setAttribute('viewBox',`0 0 ${n} ${n}`);
+  board.appendChild(svg);
+  const wallSvg = p.walls.map(w=>{ const [a,b]=w.split('-').map(Number), R=Math.floor(a/n), C=a%n;
+    return b===a+1 ? `<line x1="${C+1}" y1="${R}" x2="${C+1}" y2="${R+1}"/>` : `<line x1="${C}" y1="${R+1}" x2="${C+1}" y2="${R+1}"/>`; }).join('');
+  const ctr=i=>`${i%n+.5},${Math.floor(i/n)+.5}`;
+  const adj=(a,b)=>{ const ra=Math.floor(a/n),rb=Math.floor(b/n); return ((ra===rb&&Math.abs(a-b)===1)||Math.abs(a-b)===n) && !walls.has(Math.min(a,b)+'-'+Math.max(a,b)); };
+  const nextNeeded=()=>{ let k=0; st.path.forEach(i=>{ if (p.nums[i]) k=p.nums[i]; }); return k+1; };
+  function render(){
+    const path=st.path, on_=new Set(path);
+    svg.innerHTML = (path.length>1?`<polyline points="${path.map(ctr).join(' ')}" fill="none" stroke="var(--c)" stroke-width=".42" stroke-linecap="round" stroke-linejoin="round"/>`:'')
+      + (path.length?`<circle cx="${path[path.length-1]%n+.5}" cy="${Math.floor(path[path.length-1]/n)+.5}" r=".26" fill="var(--c)"/>`:'')
+      + `<g stroke="var(--edge)" stroke-width=".12" stroke-linecap="round">${wallSvg}</g>`;
+    cells.forEach((d,i)=>{ d.classList.toggle('on',on_.has(i)); const b=d.querySelector('.badge'); if (b) b.classList.toggle('hit',on_.has(i)); });
+    if (path.length===n*n && p.nums[path[path.length-1]]===p.last) api.win();
+  }
+  function tryStep(t){
+    const path=st.path; if (!path.length) return false;
+    const end=path[path.length-1];
+    if (path.length>1&&t===path[path.length-2]){ path.pop(); return true; }
+    if (path.includes(t)||!adj(end,t)) return false;
+    if (p.nums[end]===p.last) return false;
+    if (p.nums[t]&&p.nums[t]!==nextNeeded()) return false;
+    path.push(t); return true;
+  }
+  function moveTo(t){
+    let guard=0;
+    while (guard++<14){
+      const path=st.path, end=path[path.length-1]; if (end===t) return;
+      if (path.includes(t)){ const k=path.indexOf(t); if (k===path.length-2){ path.pop(); return; } st.path=path.slice(0,k+1); return; }
+      const er=Math.floor(end/n),ec=end%n,tr=Math.floor(t/n),tc=t%n;
+      const dr=Math.sign(tr-er), dc=Math.sign(tc-ec);
+      const opts=Math.abs(tr-er)>=Math.abs(tc-ec)?[[dr,0],[0,dc]]:[[0,dc],[dr,0]];
+      let moved=false;
+      for (const [a,b] of opts){ if (!a&&!b) continue; const s=(er+a)*n+(ec+b); if (tryStep(s)){ moved=true; break; } }
+      if (!moved) return;
+    }
+  }
+  let drag=false;
+  on(board,'pointerdown',e=>{ if (st.done) return; const i=cellFromPoint(board,n,n,e); if (i<0) return; e.preventDefault();
+    if (!st.path.length){ if (p.nums[i]===1){ st.path=[i]; drag=true; } else toast('Start on 1'); }
+    else if (st.path.includes(i)){ st.path=st.path.slice(0,st.path.indexOf(i)+1); drag=true; }
+    else { moveTo(i); drag=true; }
+    if (drag) board.setPointerCapture(e.pointerId);
+    render(); });
+  on(board,'pointermove',e=>{ if (!drag||st.done) return; const i=cellFromPoint(board,n,n,e); if (i<0) return; const before=st.path.length+':'+st.path[st.path.length-1]; moveTo(i); if (before!==st.path.length+':'+st.path[st.path.length-1]) render(); });
+  const up=()=>{ if (drag){ drag=false; api.save(); } };
+  board.addEventListener('pointerup',up); board.addEventListener('pointercancel',up);
+  on(el.querySelector('#undo'),'click',()=>{ if (st.done) return; st.path.pop(); render(); api.save(); });
+  confirmButton(el.querySelector('#clr'),'Clear',()=>{ if (st.done) return; st.path=[]; render(); api.save(); });
+  render();
+}
+
+/* ---------- Six ---------- */
+function makeSix(el,p,st,api){
+  if (!st.v) st.v=p.puz.slice();
+  if (!st.notes) st.notes=range(36).map(()=>[]);
+  let sel=p.puz.findIndex(v=>v===0), notes=false;
+  const hist=[];
+  el.innerHTML=`<div class="board six" style="--n:6"></div>
+   <div class="pad">${[1,2,3,4,5,6].map(k=>`<button data-k="${k}" aria-label="${k}">${k}</button>`).join('')}<button class="del" data-k="0" aria-label="Erase">⌫</button></div>
+   <div class="tools"><button class="btn" id="notes">Notes</button><button class="btn" id="undo">Undo</button><button class="btn" id="clr">Clear</button></div>`;
+  const board=el.querySelector('.board');
+  const cells=range(36).map(i=>{ const d=document.createElement('div'); const C=i%6,R=Math.floor(i/6);
+    d.className='cell'+(p.puz[i]?' given':'')+(C===2?' br':'')+(R===1||R===3?' bb':'');
+    if (C===5) d.style.borderRight='0'; if (R===5) d.style.borderBottom='0'; board.appendChild(d); return d; });
+  function render(){
+    const v=st.v, bad=new Set();
+    for (let i=0;i<36;i++) if (v[i]) for (let j=i+1;j<36;j++) if (v[j]===v[i]&&(Math.floor(i/6)===Math.floor(j/6)||i%6===j%6||boxOf(i)===boxOf(j))){ bad.add(i); bad.add(j); }
+    cells.forEach((d,i)=>{
+      const peer = sel>=0&&(Math.floor(i/6)===Math.floor(sel/6)||i%6===sel%6||boxOf(i)===boxOf(sel));
+      d.classList.toggle('sel',i===sel); d.classList.toggle('peer',peer&&i!==sel);
+      d.classList.toggle('same',sel>=0&&i!==sel&&v[sel]>0&&v[i]===v[sel]);
+      d.classList.toggle('bad',bad.has(i)&&!p.puz[i]);
+      if (v[i]) d.textContent=v[i];
+      else if (st.notes[i].length) d.innerHTML=`<span class="notes">${[1,2,3,4,5,6].map(k=>`<span>${st.notes[i].includes(k)?k:'&nbsp;'}</span>`).join('')}</span>`;
+      else d.textContent='';
+    });
+    if (v.every(x=>x>0)&&bad.size===0) { sel=-1; cells.forEach(d=>d.classList.remove('sel','peer','same')); api.win(); }
+  }
+  function put(k){
+    if (st.done||sel<0||p.puz[sel]) return;
+    hist.push({v:st.v.slice(),n:st.notes.map(a=>a.slice())});
+    if (notes&&k){ if (st.v[sel]) return; const a=st.notes[sel]; const j=a.indexOf(k); j>=0?a.splice(j,1):a.push(k); }
+    else { if (!k&&!st.v[sel]) st.notes[sel]=[]; st.v[sel]= (st.v[sel]===k)?0:k; if (k){
+        for (let j=0;j<36;j++) if (Math.floor(j/6)===Math.floor(sel/6)||j%6===sel%6||boxOf(j)===boxOf(sel)){ const a=st.notes[j],x=a.indexOf(k); if (x>=0) a.splice(x,1); } } }
+    render(); api.save();
+  }
+  on(board,'pointerdown',e=>{ if (st.done) return; const i=cellFromPoint(board,6,6,e); if (i<0) return; e.preventDefault(); sel=i; render(); });
+  el.querySelectorAll('.pad button').forEach(b=>on(b,'click',()=>put(+b.dataset.k)));
+  const nb=el.querySelector('#notes'); on(nb,'click',()=>{ notes=!notes; nb.classList.toggle('on',notes); });
+  on(el.querySelector('#undo'),'click',()=>{ if (st.done||!hist.length) return; const h=hist.pop(); st.v=h.v; st.notes=h.n; render(); api.save(); });
+  confirmButton(el.querySelector('#clr'),'Clear',()=>{ if (st.done) return; hist.push({v:st.v.slice(),n:st.notes.map(a=>a.slice())}); st.v=p.puz.slice(); st.notes=range(36).map(()=>[]); render(); api.save(); });
+  cur.onKey=e=>{ if (/^[1-6]$/.test(e.key)) put(+e.key); else if (e.key==='Backspace'||e.key==='Delete'||e.key==='0') put(0);
+    else if (e.key.startsWith('Arrow')&&sel>=0){ const d={ArrowUp:-6,ArrowDown:6,ArrowLeft:-1,ArrowRight:1}[e.key]; const t=sel+d; if (t>=0&&t<36&&!(Math.abs(d)===1&&Math.floor(t/6)!==Math.floor(sel/6))){ sel=t; render(); } e.preventDefault(); } };
+  render();
+}
+
+/* ---------- Plots ---------- */
+function makePlots(el,p,st,api){
+  const n=p.n, clueAt=new Map(p.clues.map(c=>[c.i,c.v]));
+  if (!Array.isArray(st.rects)) st.rects=[];
+  const hist=[];
+  el.innerHTML=`<div class="board plots" style="--n:${n}"></div>
+   <div class="tools"><button class="btn" id="undo">Undo</button><button class="btn" id="clr">Clear</button></div>
+   <p class="hint">Drag corner to corner to draw. Tap a rectangle to erase it.</p>`;
+  const board=el.querySelector('.board');
+  range(n*n).forEach(i=>{ const d=document.createElement('div'); d.className='cell'; if (i%n===n-1) d.style.borderRight='0'; if (i>=n*n-n) d.style.borderBottom='0';
+    if (clueAt.has(i)) d.innerHTML=`<span class="clue">${clueAt.get(i)}</span>`; board.appendChild(d); });
+  const layer=document.createElement('div'); layer.style.cssText='position:absolute;inset:0;pointer-events:none;z-index:2'; board.appendChild(layer);
+  const cellsOf=r=>{ const o=[]; for (let y=r.r0;y<r.r0+r.h;y++) for (let x=r.c0;x<r.c0+r.w;x++) o.push(y*n+x); return o; };
+  const rectFrom=(a,b)=>{ const r0=Math.min(Math.floor(a/n),Math.floor(b/n)), r1=Math.max(Math.floor(a/n),Math.floor(b/n)), c0=Math.min(a%n,b%n), c1=Math.max(a%n,b%n); return {r0,c0,h:r1-r0+1,w:c1-c0+1}; };
+  const overlap=(a,b)=>a.r0<b.r0+b.h&&b.r0<a.r0+a.h&&a.c0<b.c0+b.w&&b.c0<a.c0+a.w;
+  const valid=r=>{ const cl=cellsOf(r).filter(i=>clueAt.has(i)); return cl.length===1&&clueAt.get(cl[0])===r.h*r.w; };
+  const box=(r,cls,k)=>{ const inset=3; return `<div class="rect ${cls}" style="left:calc(${r.c0/n*100}% + ${inset}px);top:calc(${r.r0/n*100}% + ${inset}px);width:calc(${r.w/n*100}% - ${inset*2}px);height:calc(${r.h/n*100}% - ${inset*2}px);${k!=null?`background:color-mix(in srgb,var(--r${k%9}) 80%,transparent)`:''}"><span class="dim">${r.w}×${r.h}</span></div>`; };
+  let preview=null;
+  function render(){
+    let html=st.rects.map((r,k)=>box(r,valid(r)?'':'bad',k)).join('');
+    if (preview) html+=box(preview,'preview');
+    layer.innerHTML=html;
+    const covered=st.rects.reduce((s,r)=>s+r.h*r.w,0);
+    if (!preview && covered===n*n && st.rects.every(valid)) api.win();
+  }
+  let start=-1;
+  on(board,'pointerdown',e=>{ if (st.done) return; const i=cellFromPoint(board,n,n,e); if (i<0) return; e.preventDefault(); board.setPointerCapture(e.pointerId); start=i; preview=rectFrom(i,i); render(); });
+  on(board,'pointermove',e=>{ if (start<0) return; const i=cellFromPoint(board,n,n,e); if (i<0) return; const r=rectFrom(start,i); if (!preview||r.r0!==preview.r0||r.c0!==preview.c0||r.h!==preview.h||r.w!==preview.w){ preview=r; render(); } });
+  on(board,'pointerup',()=>{ if (start<0) return; const r=preview; preview=null; start=-1;
+    hist.push(st.rects.map(x=>({...x})));
+    const hit=st.rects.filter(x=>overlap(x,r));
+    if (r.h*r.w===1 && hit.length===1){ st.rects=st.rects.filter(x=>x!==hit[0]); }
+    else { st.rects=st.rects.filter(x=>!overlap(x,r)); st.rects.push(r); }
+    render(); api.save(); });
+  board.addEventListener('pointercancel',()=>{ start=-1; preview=null; render(); });
+  on(el.querySelector('#undo'),'click',()=>{ if (st.done||!hist.length) return; st.rects=hist.pop(); render(); api.save(); });
+  confirmButton(el.querySelector('#clr'),'Clear',()=>{ if (st.done) return; hist.push(st.rects.slice()); st.rects=[]; render(); api.save(); });
+  render();
+}
+
+/* ---------- Weave ---------- */
+function makeWeave(el,p,st,api){
+  const {cols,rows,letters,words}=p;
+  if (!Array.isArray(st.found)) st.found=[];
+  if (!Array.isArray(st.hinted)) st.hinted=[];
+  st.hints=st.hints||0;
+  el.innerHTML=`<div class="theme"><small>Theme</small><b>${esc(p.theme)}</b></div>
+   <div class="board weave" style="--n:${cols};--m:${rows}"></div>
+   <div class="current" id="curw">&nbsp;</div>
+   <div class="found-list" id="fl"></div>
+   <div class="tools"><button class="btn" id="hint">Hint</button></div>`;
+  const board=el.querySelector('.board');
+  const cells=range(cols*rows).map(i=>{ const d=document.createElement('div'); d.className='cell'; d.innerHTML=`<span>${letters[i]}</span>`; board.appendChild(d); return d; });
+  const svg=document.createElementNS('http://www.w3.org/2000/svg','svg'); svg.setAttribute('class','path'); svg.setAttribute('viewBox',`0 0 ${cols} ${rows}`); board.appendChild(svg);
+  const ctr=i=>`${i%cols+.5},${Math.floor(i/cols)+.5}`;
+  let sel=[];
+  const foundCells=()=>new Set(st.found.flatMap(k=>words[k].cells));
+  function render(){
+    const fc=foundCells(), hc=new Set(st.hinted.filter(k=>!st.found.includes(k)).flatMap(k=>words[k].cells));
+    cells.forEach((d,i)=>{ d.classList.toggle('found',fc.has(i)); d.classList.toggle('sel',sel.includes(i)); d.classList.toggle('hinted',hc.has(i)&&!sel.includes(i)); });
+    svg.innerHTML = st.found.map(k=>`<polyline points="${words[k].cells.map(ctr).join(' ')}" fill="none" stroke="var(--c)" stroke-width=".3" stroke-linecap="round" stroke-linejoin="round"/>`).join('')
+      + (sel.length>1?`<polyline points="${sel.map(ctr).join(' ')}" fill="none" stroke="var(--ink)" stroke-width=".3" stroke-linecap="round" stroke-linejoin="round"/>`:'');
+    el.querySelector('#curw').innerHTML = sel.length ? esc(sel.map(i=>letters[i]).join('')) : `${st.found.length} of ${words.length} words`;
+    el.querySelector('#fl').innerHTML = words.map((w,k)=>st.found.includes(k)?`<span class="ok">${w.w}</span>`:`<span>${'•'.repeat(w.w.length)}</span>`).join('');
+    if (st.found.length===words.length) api.win();
+  }
+  const adj=(a,b)=>{ const ra=Math.floor(a/cols),rb=Math.floor(b/cols); return (ra===rb&&Math.abs(a-b)===1)||Math.abs(a-b)===cols; };
+  let drag=false;
+  on(board,'pointerdown',e=>{ if (st.done) return; const i=cellFromPoint(board,cols,rows,e); if (i<0) return; e.preventDefault(); if (foundCells().has(i)) return; board.setPointerCapture(e.pointerId); drag=true; sel=[i]; render(); });
+  on(board,'pointermove',e=>{ if (!drag) return; const i=cellFromPoint(board,cols,rows,e,.4); if (i<0) return;
+    const last=sel[sel.length-1]; if (i===last) return;
+    if (sel.length>1&&i===sel[sel.length-2]){ sel.pop(); render(); return; }
+    if (!sel.includes(i)&&adj(last,i)&&!foundCells().has(i)){ sel.push(i); render(); } });
+  on(board,'pointerup',()=>{ if (!drag) return; drag=false;
+    const s=sel.map(i=>letters[i]).join(''); const key=sel.join(',');
+    const k=words.findIndex((w,j)=>!st.found.includes(j)&&w.cells.join(',')===key);
+    sel=[];
+    if (k>=0){ st.found.push(k); api.save(); }
+    else if (s.length>2){ const same=words.some((w,j)=>!st.found.includes(j)&&w.w===s); toast(same?`${s} is a theme word, but it is hiding somewhere else`:`${s} is not one of the words`); }
+    render(); });
+  board.addEventListener('pointercancel',()=>{ drag=false; sel=[]; render(); });
+  on(el.querySelector('#hint'),'click',()=>{ if (st.done) return; const k=words.findIndex((w,j)=>!st.found.includes(j)&&!st.hinted.includes(j)); if (k<0){ toast('Every remaining word is already outlined'); return; } st.hinted.push(k); st.hints++; api.save(); render(); });
+  render();
+}
+
+/* ---------- Mini ---------- */
+function makeMini(el,p,st,api){
+  const n=5, sol=p.sol, entries=[...p.A,...p.D];
+  if (!st.l||st.l.length!==25) st.l=Array(25).fill('');
+  if (!st.rev) st.rev=[];
+  let wrong=new Set(), sel=entries[0].cells[0], dir='A';
+  el.innerHTML=`<div class="board mini" style="--n:5"></div>
+   <div class="cluebar"><button id="prev" aria-label="Previous clue">‹</button><p id="clue"></p><button id="next" aria-label="Next clue">›</button></div>
+   <div class="kb">${['QWERTYUIOP','ASDFGHJKL','ZXCVBNM'].map((row,ri)=>`<div>${ri===2?'<button class="wide" data-k="check">Check</button>':''}${row.split('').map(ch=>`<button data-k="${ch}">${ch}</button>`).join('')}${ri===2?'<button class="wide" data-k="del" aria-label="Delete">⌫</button>':''}</div>`).join('')}</div>
+   <div class="tools"><button class="btn" id="reveal">Reveal word</button><button class="btn" id="clr">Clear</button></div>
+   <div class="clues"><div><h3>Across</h3><ol>${p.A.map((e,k)=>`<li data-e="${k}"><b>${e.num}</b>${esc(e.clue)}</li>`).join('')}</ol></div>
+   <div><h3>Down</h3><ol>${p.D.map((e,k)=>`<li data-e="${p.A.length+k}"><b>${e.num}</b>${esc(e.clue)}</li>`).join('')}</ol></div></div>`;
+  const board=el.querySelector('.board');
+  const cells=range(25).map(i=>{ const d=document.createElement('div'); d.className='cell'+(sol[i]==='#'?' blk':''); if (i%n===n-1) d.style.borderRight='0'; if (i>=20) d.style.borderBottom='0'; board.appendChild(d); return d; });
+  const lis=[...el.querySelectorAll('.clues li')];
+  const entryOf=(i,d)=>entries.find(e=>e.dir===d&&e.cells.includes(i));
+  function curEntry(){ let e=entryOf(sel,dir); if (!e){ dir=dir==='A'?'D':'A'; e=entryOf(sel,dir); } return e; }
+  function render(){
+    const live = sel>=0 && !st.done, e = live ? curEntry() : null;
+    cells.forEach((d,i)=>{ if (sol[i]==='#') return;
+      d.innerHTML=(p.num[i]?`<span class="num">${p.num[i]}</span>`:'')+esc(st.l[i]);
+      d.classList.toggle('sel',live&&i===sel); d.classList.toggle('word',!!e&&e.cells.includes(i)&&i!==sel);
+      d.classList.toggle('wrong',wrong.has(i)); d.classList.toggle('rev',st.rev.includes(i)); });
+    el.querySelector('#clue').innerHTML= e ? `<b>${e.num}${e.dir}</b>${esc(e.clue)}` : 'Solved';
+    lis.forEach((li,k)=>{ const en=entries[k]; li.classList.toggle('cur',en===e); li.classList.toggle('ok',en.cells.every(i=>st.l[i]===sol[i])); });
+    if (!st.done && range(25).every(i=>sol[i]==='#'||st.l[i]===sol[i])){ sel=-1; api.win(); render(); }
+  }
+  function gotoEntry(e,preferEmpty=true){ dir=e.dir; sel=(preferEmpty&&e.cells.find(i=>!st.l[i]))??e.cells[0]; }
+  function advance(){
+    const e=curEntry(), k=e.cells.indexOf(sel);
+    const after=e.cells.slice(k+1).find(i=>!st.l[i]);
+    if (after!==undefined){ sel=after; return; }
+    if (e.cells.some(i=>!st.l[i])){ sel=e.cells.find(i=>!st.l[i]); return; }
+    const idx=entries.indexOf(e);
+    for (let s=1;s<=entries.length;s++){ const en=entries[(idx+s)%entries.length]; if (en.cells.some(i=>!st.l[i])){ gotoEntry(en); return; } }
+    if (k<e.cells.length-1) sel=e.cells[k+1];
+  }
+  function key(k){
+    if (st.done||sel<0) return;
+    if (k==='check'){ wrong=new Set(range(25).filter(i=>st.l[i]&&st.l[i]!==sol[i])); if (!wrong.size) toast('No mistakes so far'); render(); return; }
+    const e=curEntry();
+    if (k==='del'){
+      if (st.l[sel]&&!st.rev.includes(sel)) st.l[sel]='';
+      else { const j=e.cells.indexOf(sel); if (j>0){ sel=e.cells[j-1]; if (!st.rev.includes(sel)) st.l[sel]=''; } }
+      wrong.delete(sel);
+    } else { if (!st.rev.includes(sel)) st.l[sel]=k; wrong.delete(sel); advance(); }
+    render(); api.save();
+  }
+  on(board,'pointerdown',e=>{ if (st.done) return; const i=cellFromPoint(board,n,n,e); if (i<0||sol[i]==='#') return; e.preventDefault();
+    if (i===sel) dir=dir==='A'?'D':'A'; else { sel=i; if (!entryOf(i,dir)) dir=dir==='A'?'D':'A'; } render(); });
+  el.querySelectorAll('.kb button').forEach(b=>on(b,'click',()=>key(b.dataset.k)));
+  const step=s=>{ if (st.done) return; const idx=entries.indexOf(curEntry()); gotoEntry(entries[(idx+s+entries.length)%entries.length]); render(); };
+  on(el.querySelector('#prev'),'click',()=>step(-1)); on(el.querySelector('#next'),'click',()=>step(1));
+  lis.forEach((li,k)=>on(li,'click',()=>{ if (st.done) return; gotoEntry(entries[k]); render(); }));
+  on(el.querySelector('#reveal'),'click',()=>{ if (st.done) return; curEntry().cells.forEach(i=>{ if (st.l[i]!==sol[i]){ st.l[i]=sol[i]; if (!st.rev.includes(i)) st.rev.push(i); } wrong.delete(i); }); st.hints=(st.hints||0)+1; render(); api.save(); });
+  confirmButton(el.querySelector('#clr'),'Clear',()=>{ if (st.done) return; st.l=Array(25).fill(''); st.rev=[]; wrong=new Set(); render(); api.save(); });
+  cur.onKey=e=>{ if (e.metaKey||e.ctrlKey||e.altKey) return;
+    if (/^[a-zA-Z]$/.test(e.key)){ key(e.key.toUpperCase()); e.preventDefault(); }
+    else if (e.key==='Backspace'){ key('del'); e.preventDefault(); }
+    else if (e.key==='Tab'||e.key==='Enter'){ step(e.shiftKey?-1:1); e.preventDefault(); }
+    else if (e.key===' '){ dir=dir==='A'?'D':'A'; render(); e.preventDefault(); } };
+  if (st.done) sel=-1;
+  render();
+}
+
+/* ================= routing ================= */
+let shownDay = todayKey();
+function route(){
+  stopTimer(); if (cur) cur.api.save(); cur=null; closeSheets();
+  try {
+    const h=location.hash.slice(1), m=h.match(/^([a-z]+)(?:-(today|\d+))?$/), g=m&&GAMES.find(x=>x.id===m[1]);
+    if (!g) renderHub();
+    else if (!m[2]) renderGamePage(g);
+    else if (m[2]==='today') openPuzzle(g,'d'+todayKey());
+    else { const L=+m[2]; if (L<1||L>LEVELS) renderGamePage(g); else openPuzzle(g,'L'+L); }
+  } catch(err){
+    logError('route',err.message,err.stack);
+    app.innerHTML=`<div class="foot" style="margin-top:60px"><h2>That puzzle did not load</h2><div>The problem was logged. Try another one for now.</div><a class="btn" href="#">All games</a></div>`;
+  }
+  window.scrollTo(0,0);
+}
+window.addEventListener('hashchange',route);
+document.addEventListener('keydown',e=>{ if (cur&&cur.onKey&&!cur.api.st.done&&!document.querySelector('.sheet')) safe(cur.onKey)(e); });
+document.addEventListener('visibilitychange',()=>{ if (!document.hidden){ flushOutbox(); if (todayKey()!==shownDay){ shownDay=todayKey(); if (!cur) route(); } } else if (cur) cur.api.save(); });
+window.__pp = {getPuzzle, GAMES, dayNum, keyOf, bloomCount, evenCount, sixCount, plotsSolve, THEMES, MINI};
+flushOutbox();
+route();
+})();
+</script>
+</body>
+</html>
